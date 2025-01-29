@@ -92,22 +92,22 @@ void CPU::set_status_register(char status, bool enable) {
 void CPU::enable_status_register(char status) {
     switch(status) {
     case 'C':
-        reg_p |= 1;
+        reg_p |= 0b00000001;
         break;
     case 'Z':
-        reg_p |= 2;
+        reg_p |= 0b00000010;
         break;
     case 'I':
-        reg_p |= 4;
+        reg_p |= 0b00000100;
         break;
     case 'D':
-        reg_p |= 8;
+        reg_p |= 0b00001000;
         break;
     case 'V':
-        reg_p |= 64;
+        reg_p |= 0b01000000;
         break;
     case 'N':
-        reg_p |= 128;
+        reg_p |= 0b10000000;
         break;
     }
 }
@@ -115,22 +115,22 @@ void CPU::enable_status_register(char status) {
 void CPU::clear_status_register(char status) {
     switch(status) {
     case 'C':
-        reg_p &= 0xfe;
+        reg_p &= 0b11111110;
         break;
     case 'Z':
-        reg_p &= 0xfd;
+        reg_p &= 0b11111101;
         break;
     case 'I':
-        reg_p &= 0xfb;
+        reg_p &= 0b11111011;
         break;
     case 'D':
-        reg_p &= 0xf7;
+        reg_p &= 0b11110111;
         break;
     case 'V':
-        reg_p &= 0xbf;
+        reg_p &= 0b10111111;
         break;
     case 'N':
-        reg_p &= 0x7f;
+        reg_p &= 0b01111111;
         break;
     }
 }
@@ -139,22 +139,22 @@ bool CPU::get_status_register(char status) {
     unsigned char res;
     switch(status) {
     case 'C':
-        res = reg_p & 1;
+        res = reg_p & 0b00000001;
         break;
     case 'Z':
-        res = reg_p & 2;
+        res = reg_p & 0b00000010;
         break;
     case 'I':
-        res = reg_p & 4;
+        res = reg_p & 0b00000100;
         break;
     case 'D':
-        res = reg_p & 8;
+        res = reg_p & 0b00001000;
         break;
     case 'V':
-        res = reg_p & 64;
+        res = reg_p & 0b01000000;
         break;
     case 'N':
-        res = reg_p & 128;
+        res = reg_p & 0b10000000;
         break;
     }
 

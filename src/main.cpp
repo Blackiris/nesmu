@@ -1,6 +1,7 @@
 #include <iostream>
 #include "ROM/romloader.h"
 #include "components/cpu.h"
+#include "SDL3/SDL.h"
 
 
 int main()
