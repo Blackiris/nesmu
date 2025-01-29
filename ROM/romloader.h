@@ -9,7 +9,7 @@ class RomLoader
 public:
     RomLoader();
 
-    ROM loadRom(std::string filePath);
+    ROM read_rom_from_disk(std::string filePath);
 };
 
 #endif // ROMLOADER_H

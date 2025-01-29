@@ -8,7 +8,7 @@
 
 RomLoader::RomLoader() {}
 
-ROM RomLoader::loadRom(std::string filePath) {
+ROM RomLoader::read_rom_from_disk(std::string filePath) {
     std::ifstream rom_file(filePath, std::ios_base::binary);
     std::cout << filePath << std::endl;
 
