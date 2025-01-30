@@ -12,14 +12,14 @@
 class CPU
 {
 public:
-    CPU();
+    CPU(RAM& ram);
     void init();
     void load_rom(const ROM& rom);
-    bool exec_cycle();
+    bool exec_cycle(int nb_cycles);
 
 private:
     static const std::map<unsigned char, std::string> opcode_to_inst;
-    RAM ram;
+    RAM m_ram;
 
     unsigned char reg_a; //accumulator
     unsigned char reg_x;
@@ -41,7 +41,7 @@ private:
     void clear_status_register(char status);
     bool get_status_register(char status);
 
-    bool apply_op_code(const unsigned char& opcode);
+    short apply_op_code(const unsigned char& opcode);
     uint16_t get_address_from_memory(const uint16_t& address_1st_byte);
     uint16_t convert_2_bytes_to_16bits(const unsigned char& byte1, const unsigned char& byte2);
     int jump_relative(bool do_jump);

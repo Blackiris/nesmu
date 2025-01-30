@@ -43,7 +43,7 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
 
 };
 
-CPU::CPU(): ram(65535) {}
+CPU::CPU(RAM& ram): m_ram(ram) {}
 
 void CPU::init(){
     reg_x = 0;
@@ -51,15 +51,23 @@ void CPU::init(){
 }
 
 void CPU::load_rom(const ROM& rom) {
-    ram.set_memory_range(0x8000, rom.prg_rom);
+    m_ram.set_memory_range(0x8000, rom.prg_rom);
+    if (rom.prg_rom.size() == 16384) {
+        m_ram.set_memory_range(0xc000, rom.prg_rom);
+    }
 
     init_pc_from_reset_vector();
 }
 
-bool CPU::exec_cycle() {
-    unsigned char opcode = ram.get_value_at(reg_pc);
-    bool success = apply_op_code(opcode);
-    return success;
+bool CPU::exec_cycle(int nb_cycles) {
+    int total_cycles = 0;
+    while (total_cycles < nb_cycles) {
+        unsigned char opcode = m_ram.get_value_at(reg_pc);
+        short cycle_op = apply_op_code(opcode);
+        total_cycles += cycle_op;
+    }
+
+    return total_cycles >= nb_cycles;
 }
 
 void CPU::init_pc_from_reset_vector() {
@@ -67,8 +75,8 @@ void CPU::init_pc_from_reset_vector() {
 }
 
 uint16_t CPU::get_address_from_memory(const uint16_t& address_1st_byte) {
-    unsigned char byte1 = ram.get_value_at(address_1st_byte);
-    unsigned char byte2 = ram.get_value_at(address_1st_byte + 1);
+    unsigned char byte1 = m_ram.get_value_at(address_1st_byte);
+    unsigned char byte2 = m_ram.get_value_at(address_1st_byte + 1);
 
     //std::bitset<8> byte1_bs(byte1);
     //std::bitset<8> byte2_bs(byte2);
@@ -161,18 +169,17 @@ bool CPU::get_status_register(char status) {
     return res > 0;
 }
 
-bool CPU::apply_op_code(const unsigned char& opcode) {
+short CPU::apply_op_code(const unsigned char& opcode) {
     short cycle = 0;
-    bool success = true;
     uint16_t addr;
     unsigned char addr8;
     unsigned char value, res;
+    uint16_t ori_reg_pc = reg_pc;
 
-    std::cout << reg_pc << " " << opcode_to_inst.at(opcode);
 
     switch(opcode) {
     case 0x09: //ORA Immediate
-        value = ram.get_value_at(reg_pc+1);
+        value = m_ram.get_value_at(reg_pc+1);
         reg_a |= value;
         set_zero_negative_flags(reg_a);
         reg_pc += 2;
@@ -189,7 +196,7 @@ bool CPU::apply_op_code(const unsigned char& opcode) {
         break;
     case 0x2c: //BIT Absolute
         addr = get_address_from_memory(reg_pc+1);
-        value = ram.get_value_at(addr);
+        value = m_ram.get_value_at(addr);
         res = reg_a & value;
         set_status_register('V', value & 64);
         set_status_register('N', value & 128);
@@ -199,7 +206,7 @@ bool CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 4;
         break;
     case 0x29: //AND Immediate
-        value = ram.get_value_at(reg_pc+1);
+        value = m_ram.get_value_at(reg_pc+1);
         reg_a &= value;
         set_zero_negative_flags(reg_a);
         reg_pc += 2;
@@ -220,20 +227,20 @@ bool CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 2;
         break;
     case 0x84: //STY Zero Page
-        addr8 = ram.get_value_at(reg_pc+1);
-        ram.set_value_at_zero_page(addr8, reg_y);
+        addr8 = m_ram.get_value_at(reg_pc+1);
+        m_ram.set_value_at_zero_page(addr8, reg_y);
         reg_pc += 2;
         cycle = 3;
         break;
     case 0x85: //STA Zero Page
-        addr8 = ram.get_value_at(reg_pc+1);
-        ram.set_value_at_zero_page(addr8, reg_a);
+        addr8 = m_ram.get_value_at(reg_pc+1);
+        m_ram.set_value_at_zero_page(addr8, reg_a);
         reg_pc += 2;
         cycle = 3;
         break;
     case 0x86: //STX Zero Page
-        addr8 = ram.get_value_at(reg_pc+1);
-        ram.set_value_at_zero_page(addr8, reg_x);
+        addr8 = m_ram.get_value_at(reg_pc+1);
+        m_ram.set_value_at_zero_page(addr8, reg_x);
         reg_pc += 2;
         cycle = 3;
         break;
@@ -253,20 +260,20 @@ bool CPU::apply_op_code(const unsigned char& opcode) {
         break;
     case 0x8d: //STA Absolute
         addr = get_address_from_memory(reg_pc+1);
-        ram.set_value_at(addr, reg_a);
+        m_ram.set_value_at(addr, reg_a);
         cycle = 4;
         reg_pc += 3;
         break;
     case 0x91: //STA Indirect Y
-        addr8 = ram.get_value_at(reg_pc+1);
+        addr8 = m_ram.get_value_at(reg_pc+1);
         addr = convert_2_bytes_to_16bits(addr8, reg_y);
-        ram.set_value_at(addr, reg_a);
+        m_ram.set_value_at(addr, reg_a);
         cycle = 6;
         reg_pc += 2;
         break;
     case 0x99: //STA Absolute Y
         addr = get_address_from_memory(reg_pc+1);
-        ram.set_value_at(addr + reg_y, reg_a);
+        m_ram.set_value_at(addr + reg_y, reg_a);
         reg_pc += 3;
         cycle = 5;
         break;
@@ -276,23 +283,23 @@ bool CPU::apply_op_code(const unsigned char& opcode) {
         reg_pc += 1;
         break;
     case 0xa0: //LDY Immediate
-        reg_y = ram.get_value_at(reg_pc+1);
+        reg_y = m_ram.get_value_at(reg_pc+1);
         reg_pc += 2;
         cycle = 2;
         break;
     case 0xa2: //LDX Immediate
-        reg_x = ram.get_value_at(reg_pc+1);
+        reg_x = m_ram.get_value_at(reg_pc+1);
         reg_pc += 2;
         cycle = 2;
         break;
     case 0xa9: //LDA immediate
-        reg_a = ram.get_value_at(reg_pc+1);
+        reg_a = m_ram.get_value_at(reg_pc+1);
         reg_pc += 2;
         cycle = 2;
         break;
     case 0xad: //LDA Absolute
         addr = get_address_from_memory(reg_pc+1);
-        reg_a = ram.get_value_at(addr);
+        reg_a = m_ram.get_value_at(addr);
         reg_pc += 3;
         cycle = 4;
         break;
@@ -301,7 +308,7 @@ bool CPU::apply_op_code(const unsigned char& opcode) {
         break;
     case 0xbd: //LDA Absolute X
         addr = get_address_from_memory(reg_pc+1);
-        reg_a = ram.get_value_at(addr + reg_x);
+        reg_a = m_ram.get_value_at(addr + reg_x);
         reg_pc += 3;
         cycle = 4; //FIXME or 5 if page crossed
         break;
@@ -338,9 +345,9 @@ bool CPU::apply_op_code(const unsigned char& opcode) {
         break;
     case 0xee: //INC Absolute
         addr = get_address_from_memory(reg_pc+1);
-        value = ram.get_value_at(addr);
+        value = m_ram.get_value_at(addr);
         value += 1;
-        ram.set_value_at(addr, value);
+        m_ram.set_value_at(addr, value);
         set_zero_negative_flags(value);
         reg_pc += 3;
         cycle = 6;
@@ -348,19 +355,18 @@ bool CPU::apply_op_code(const unsigned char& opcode) {
     default:
         std::cout << "Unimplemented opcode: 0x" << std::hex << static_cast<int>(opcode & 0xff) << "." << std::endl;
         std::cout << (opcode == 0xd8);
-        success = false;
     }
-    std::cout << " " << get_address_from_memory(0x8058) << "-";
-    std::cout << " " << reg_pc << std::endl;
 
-    return success;
+    std::cout << ori_reg_pc << "->" << reg_pc << " " << opcode_to_inst.at(opcode) << std::endl;
+
+    return cycle;
 }
 
 int CPU::jump_relative(bool do_jump) {
     int cycle = 2;
     if (do_jump) {
         // do the jump
-        unsigned char offset = ram.get_value_at(reg_pc+1);
+        unsigned char offset = m_ram.get_value_at(reg_pc+1);
         char* real_offset = reinterpret_cast<char*>(&offset);
         reg_pc += 2 + *real_offset;
         cycle = 3; //FIXME or 4 if page crossed
@@ -372,35 +378,21 @@ int CPU::jump_relative(bool do_jump) {
 }
 
 void CPU::push_value_to_stack(const uint16_t& value) {
-    ram.set_value_at(reg_sp, value & 0x00FF);
-    ram.set_value_at(reg_sp+1, (value & 0xFF00) >> 8);
+    m_ram.set_value_at(reg_sp, value & 0x00FF);
+    m_ram.set_value_at(reg_sp+1, (value & 0xFF00) >> 8);
     reg_sp += 2;
 }
 
 uint16_t CPU::pull_value_from_stack() {
     reg_sp -= 2;
-    return convert_2_bytes_to_16bits(ram.get_value_at(reg_sp), ram.get_value_at(reg_sp+1));
+    return convert_2_bytes_to_16bits(m_ram.get_value_at(reg_sp), m_ram.get_value_at(reg_sp+1));
 }
 
 int CPU::cmp_immediate(const unsigned char& reg_value) {
-    unsigned char value = ram.get_value_at(reg_pc+1);
-    if (reg_value == value) {
-        enable_status_register('Z');
-    } else {
-        clear_status_register('Z');
-    }
-
-    if (reg_value >= value) {
-        enable_status_register('C');
-    } else {
-        clear_status_register('C');
-    }
-
-    if (reg_value < value) {
-        enable_status_register('N');
-    } else {
-        clear_status_register('N');
-    }
+    unsigned char value = m_ram.get_value_at(reg_pc+1);
+    set_status_register('Z', reg_value == value);
+    set_status_register('C', reg_value >= value);
+    set_status_register('N', reg_value < value);
 
     reg_pc += 2;
     return 2;
