@@ -47,6 +47,7 @@ private:
     int jump_relative(bool do_jump);
     void push_value_to_stack(const uint16_t& value);
     uint16_t pull_value_from_stack();
+    void cmp(const unsigned char& reg_value, const unsigned char& value);
     int cmp_immediate(const unsigned char& reg_value);
     void set_zero_negative_flags(const unsigned char& value);
     void shift_left(unsigned char& val);

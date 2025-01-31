@@ -8,7 +8,8 @@ void PPU::set_vblank(bool enable) {
 }
 
 void PPU::maybe_send_nmi() {
-    if (m_io_registers.get_bit_at(0x2, 7)) {
+    // Bit 7 of PPU Control Register 1
+    if (m_io_registers.get_bit_at(0x0, 7)) {
         // send NMI
         m_cpu.set_nmi();
     }

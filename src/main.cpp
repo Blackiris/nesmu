@@ -38,7 +38,7 @@ int main()
         SDL_Log("SDL_Init error %s", SDL_GetError());
     }
 
-    if (!SDL_CreateWindowAndRenderer("Nesmu", 320, 240, 0, &window, &renderer)) {
+    if (!SDL_CreateWindowAndRenderer("Nesmu", 256, 224, 0, &window, &renderer)) {
         SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }

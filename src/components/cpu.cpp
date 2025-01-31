@@ -19,6 +19,7 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0x18, "CLC"},
     {0x20, "JSR"},
     {0x24, "BIT Zero Page"},
+    {0x25, "AND Zero Page"},
     {0x29, "AND Immediate"},
     {0x2a, "ROL Accumulator"},
     {0x2c, "BIT Absolute"},
@@ -31,6 +32,7 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0x60, "RTS"},
     {0x65, "ADC Zero Page"},
     {0x68, "PLA"},
+    {0x69, "ADC Immediate"},
     {0x6c, "JMP Indirect"},
     {0x78, "SEI"},
     {0x7e, "ROR Absolute X"},
@@ -63,14 +65,17 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0xbd, "LDA Absolute X"},
     {0xbe, "LDX Absolute Y"},
     {0xc0, "CPY Immediate"},
+    {0xc5, "CMP Zero Page"},
     {0xc8, "INY"},
     {0xc9, "CMP Immediate"},
     {0xca, "DEX"},
     {0xce, "DEC Absolute"},
     {0xd0, "BNE"},
     {0xd8, "CLD"},
+    {0xd9, "CMP Absolute Y"},
     {0xde, "DEC Absolute X"},
     {0xe0, "CPX Immediate"},
+    {0xe4, "CPX Zero Page"},
     {0xe6, "INC Zero Page"},
     {0xe8, "INX"},
     {0xee, "INC Absolute"},
@@ -257,6 +262,14 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         reg_pc = addr;
         cycle = 6;
         break;
+    case 0x25: //AND Zero Page
+        addr8 = m_ram.get_value_at(reg_pc+1);
+        value = m_ram.get_value_at(addr8);
+        reg_a &= value;
+        set_zero_negative_flags(reg_a);
+        reg_pc += 2;
+        cycle = 3;
+        break;
     case 0x29: //AND Immediate
         value = m_ram.get_value_at(reg_pc+1);
         reg_a &= value;
@@ -321,7 +334,8 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 6;
         break;
     case 0x65: //ADC Zero Page
-        value = m_ram.get_value_at(reg_pc+1);
+        addr8 = m_ram.get_value_at(reg_pc+1);
+        value = m_ram.get_value_at(addr8);
         add_with_carry(value);
         reg_pc += 2;
         cycle = 3;
@@ -332,6 +346,12 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         set_zero_negative_flags(reg_a);
         reg_pc += 1;
         cycle = 4;
+        break;
+    case 0x69: //ADC Immediate
+        value = m_ram.get_value_at(reg_pc+1);
+        add_with_carry(value);
+        reg_pc += 2;
+        cycle = 2;
         break;
     case 0x6c: //JMP Indirect
         addr = get_address_from_memory(reg_pc+1);
@@ -526,6 +546,13 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = cmp_immediate(reg_y);
         reg_pc += 2;
         break;
+    case 0xc5: //CMP Zero Page
+        addr8 = m_ram.get_value_at(reg_pc+1);
+        value = m_ram.get_value_at(addr8);
+        cmp(reg_a, value);
+        reg_pc += 2;
+        cycle = 3;
+        break;
     case 0xc8: //INY
         reg_y++;
         set_zero_negative_flags(reg_y);
@@ -558,7 +585,14 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         reg_pc += 1;
         cycle = 2;
         break;
-    case 0xde: //DEC Absolute.X
+    case 0xd9: //CMP Absolute Y
+        addr = get_address_from_memory(reg_pc+1);
+        value = m_ram.get_value_at(addr + reg_y);
+        cmp(reg_a, value);
+        reg_pc += 3;
+        cycle = 4; //5 if page crossed
+        break;
+    case 0xde: //DEC Absolute X
         addr = get_address_from_memory(reg_pc+1);
         value = m_ram.get_value_at(addr+reg_x);
         value--;
@@ -570,6 +604,13 @@ short CPU::apply_op_code(const unsigned char& opcode) {
     case 0xe0: //CPX Immediate
         cycle = cmp_immediate(reg_x);
         reg_pc += 2;
+        break;
+    case 0xe4: //CPX Zero Page
+        addr8 = m_ram.get_value_at(reg_pc+1);
+        value = m_ram.get_value_at(addr8);
+        cmp(reg_x, value);
+        reg_pc += 2;
+        cycle = 3;
         break;
     case 0xe6: //INC Zero Page
         addr8 = m_ram.get_value_at(reg_pc+1);
@@ -648,12 +689,15 @@ uint16_t CPU::pull_value_from_stack() {
     return convert_2_bytes_to_16bits(m_ram.get_value_at(reg_sp), m_ram.get_value_at(reg_sp+1));
 }
 
-int CPU::cmp_immediate(const unsigned char& reg_value) {
-    unsigned char value = m_ram.get_value_at(reg_pc+1);
+void CPU::cmp(const unsigned char& reg_value, const unsigned char& value) {
     set_status_register('Z', reg_value == value);
     set_status_register('C', reg_value >= value);
     set_status_register('N', reg_value < value);
+}
 
+int CPU::cmp_immediate(const unsigned char& reg_value) {
+    unsigned char value = m_ram.get_value_at(reg_pc+1);
+    cmp(reg_value, value);
     reg_pc += 2;
     return 2;
 }
