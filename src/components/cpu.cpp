@@ -3,6 +3,12 @@
 #include <iostream>
 #include <bitset>
 
+#define REGISTER_MASK_C 0b00000001
+#define REGISTER_MASK_Z 0b00000010
+#define REGISTER_MASK_I 0b00000100
+#define REGISTER_MASK_D 0b00001000
+#define REGISTER_MASK_V 0b01000000
+#define REGISTER_MASK_N 0b10000000
 
 const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0x05, "ORA Zero Page"},
@@ -129,22 +135,22 @@ void CPU::set_status_register(char status, bool enable) {
 void CPU::enable_status_register(char status) {
     switch(status) {
     case 'C':
-        reg_p |= 0b00000001;
+        reg_p |= REGISTER_MASK_C;
         break;
     case 'Z':
-        reg_p |= 0b00000010;
+        reg_p |= REGISTER_MASK_Z;
         break;
     case 'I':
-        reg_p |= 0b00000100;
+        reg_p |= REGISTER_MASK_I;
         break;
     case 'D':
-        reg_p |= 0b00001000;
+        reg_p |= REGISTER_MASK_D;
         break;
     case 'V':
-        reg_p |= 0b01000000;
+        reg_p |= REGISTER_MASK_V;
         break;
     case 'N':
-        reg_p |= 0b10000000;
+        reg_p |= REGISTER_MASK_N;
         break;
     }
 }
@@ -152,22 +158,22 @@ void CPU::enable_status_register(char status) {
 void CPU::clear_status_register(char status) {
     switch(status) {
     case 'C':
-        reg_p &= 0b11111110;
+        reg_p &= ~REGISTER_MASK_C;
         break;
     case 'Z':
-        reg_p &= 0b11111101;
+        reg_p &= ~REGISTER_MASK_Z;
         break;
     case 'I':
-        reg_p &= 0b11111011;
+        reg_p &= ~REGISTER_MASK_I;
         break;
     case 'D':
-        reg_p &= 0b11110111;
+        reg_p &= ~REGISTER_MASK_D;
         break;
     case 'V':
-        reg_p &= 0b10111111;
+        reg_p &= ~REGISTER_MASK_V;
         break;
     case 'N':
-        reg_p &= 0b01111111;
+        reg_p &= ~REGISTER_MASK_N;
         break;
     }
 }
@@ -176,22 +182,22 @@ bool CPU::get_status_register(char status) {
     unsigned char res;
     switch(status) {
     case 'C':
-        res = reg_p & 0b00000001;
+        res = reg_p & REGISTER_MASK_C;
         break;
     case 'Z':
-        res = reg_p & 0b00000010;
+        res = reg_p & REGISTER_MASK_Z;
         break;
     case 'I':
-        res = reg_p & 0b00000100;
+        res = reg_p & REGISTER_MASK_I;
         break;
     case 'D':
-        res = reg_p & 0b00001000;
+        res = reg_p & REGISTER_MASK_D;
         break;
     case 'V':
-        res = reg_p & 0b01000000;
+        res = reg_p & REGISTER_MASK_V;
         break;
     case 'N':
-        res = reg_p & 0b10000000;
+        res = reg_p & REGISTER_MASK_N;
         break;
     }
 
