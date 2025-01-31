@@ -6,6 +6,7 @@
 #include "components/screen.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+#include <math.h>
 
 
 const float CPU_FREQ = 1789773.0;  // 1.789 Mhz
@@ -15,6 +16,7 @@ const int CYCLES_PER_FRAME_ACTIVE = CYCLES_PER_FRAME * 240 / 262;
 const int CYCLES_PER_FRAME_VBLANK = CYCLES_PER_FRAME - CYCLES_PER_FRAME_ACTIVE;
 
 bool execute_frame(SDL_Renderer* renderer, CPU& cpu, PPU& ppu, Screen& screen) {
+    Uint64 start = SDL_GetPerformanceCounter();
 
     ppu.set_vblank(false);
     cpu.exec_cycle(CYCLES_PER_FRAME_ACTIVE);
@@ -25,6 +27,11 @@ bool execute_frame(SDL_Renderer* renderer, CPU& cpu, PPU& ppu, Screen& screen) {
     Frame frame;
     frame.colors[10][50] = {0xff, 0x22, 0x00};
     screen.render_frame(frame);
+
+    Uint64 end = SDL_GetPerformanceCounter();
+    float elapsedMS = (end - start) / (float)SDL_GetPerformanceFrequency() * 1000.0f;
+
+    SDL_Delay(fmax(floor(16.666f - elapsedMS), 0));
 
     return true;
 }
@@ -57,7 +64,19 @@ int main()
     cpu.init();
     ppu.load_chr_rom(rom);
 
-    while(execute_frame(renderer, cpu, ppu, screen)) {
+    bool success = true;
+    while(success) {
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {  // poll until all events are handled!
+            if (event.type == SDL_EVENT_QUIT) {
+                success = false;
+            }
+        }
+
+        if (success) {
+            success = execute_frame(renderer, cpu, ppu, screen);
+        }
+
     }
 
     SDL_DestroyRenderer(renderer);
