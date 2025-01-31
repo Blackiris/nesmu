@@ -1,15 +1,30 @@
 #include <iostream>
 #include "ROM/romloader.h"
 #include "components/cpu.h"
+#include "components/cpumemorymap.h"
+#include "components/ppu.h"
+#include "components/screen.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
+
 const float CPU_FREQ = 1789773.0;  // 1.789 Mhz
 const float FRAME_RATE  = 60.0;
-const int CYCLES_PER_FRAME = CPU_FREQ / FRAME_RATE;
+const float CYCLES_PER_FRAME = CPU_FREQ / FRAME_RATE;
+const int CYCLES_PER_FRAME_ACTIVE = CYCLES_PER_FRAME * 240 / 262;
+const int CYCLES_PER_FRAME_VBLANK = CYCLES_PER_FRAME - CYCLES_PER_FRAME_ACTIVE;
 
-bool execute_frame(CPU& cpu) {
-    cpu.exec_cycle(CYCLES_PER_FRAME);
+bool execute_frame(SDL_Renderer* renderer, CPU& cpu, PPU& ppu, Screen& screen) {
+
+    ppu.set_vblank(false);
+    cpu.exec_cycle(CYCLES_PER_FRAME_ACTIVE);
+    ppu.set_vblank(true);
+    ppu.maybe_send_nmi();
+    cpu.exec_cycle(CYCLES_PER_FRAME_VBLANK);
+
+    Frame frame;
+    frame.colors[10][50] = {0xff, 0x22, 0x00};
+    screen.render_frame(frame);
 
     return true;
 }
@@ -32,16 +47,22 @@ int main()
 
 
     RomLoader romLoader;
-    ROM rom = romLoader.read_rom_from_disk("SMB.nes");
+    ROM rom = romLoader.read_rom_from_disk("pacman.nes");
     RAM ram(65535, {{0x0000, 0x2000, 0x0800} /*RAM*/, {0x2000, 0x4020, 0x8} /*IO registers*/});
-    CPU cpu(ram);
+    CPUMemoryMap cpu_mem_map(rom, ram);
+    CPU cpu(cpu_mem_map);
+    PPU ppu(ram, cpu);
+    Screen screen(renderer);
     cpu.init();
-    cpu.load_rom(rom);
+    ppu.load_chr_rom(rom);
 
-    while(execute_frame(cpu)) {
+    while(execute_frame(renderer, cpu, ppu, screen)) {
     }
 
     SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+
 
     return 0;
 }

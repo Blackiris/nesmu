@@ -5,21 +5,22 @@
 #include <map>
 #include <string>
 
-#include "ram.h"
+#include "imemory.h"
 #include "../ROM/rom.h"
 
 
 class CPU
 {
 public:
-    CPU(RAM& ram);
+    CPU(IMemory& ram);
     void init();
-    void load_rom(const ROM& rom);
     bool exec_cycle(int nb_cycles);
+    void set_nmi();
 
 private:
     static const std::map<unsigned char, std::string> opcode_to_inst;
-    RAM m_ram;
+    IMemory& m_ram;
+    bool nmi;
 
     unsigned char reg_a; //accumulator
     unsigned char reg_x;
@@ -35,7 +36,6 @@ private:
     unsigned char reg_p; //status register
 
 
-    void init_pc_from_reset_vector();
     void set_status_register(char status, bool enable);
     void enable_status_register(char status);
     void clear_status_register(char status);
@@ -49,6 +49,11 @@ private:
     uint16_t pull_value_from_stack();
     int cmp_immediate(const unsigned char& reg_value);
     void set_zero_negative_flags(const unsigned char& value);
+    void shift_left(unsigned char& val);
+    void shift_right(unsigned char& val);
+    void rotate_right(unsigned char& val);
+    void substract_with_carry(const unsigned char& value);
+    void add_with_carry(const unsigned char& value);
 };
 
 #endif // CPU_H
