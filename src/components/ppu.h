@@ -8,13 +8,13 @@
 class PPU
 {
 public:
-    PPU(RAM& ram, CPU& cpu);
+    PPU(RAM& io_registers, CPU& cpu);
     void set_vblank(bool enable);
     void maybe_send_nmi();
     void load_chr_rom(const ROM& rom);
 
 private:
-    RAM& m_ram;
+    RAM& m_io_registers;
     CPU& m_cpu;
     RAM m_vram;
 };

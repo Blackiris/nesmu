@@ -48,10 +48,11 @@ int main()
 
     RomLoader romLoader;
     ROM rom = romLoader.read_rom_from_disk("pacman.nes");
-    RAM ram(65535, {{0x0000, 0x2000, 0x0800} /*RAM*/, {0x2000, 0x4020, 0x8} /*IO registers*/});
-    CPUMemoryMap cpu_mem_map(rom, ram);
+    RAM io_registers(8);
+    RAM ram(0x0800);
+    CPUMemoryMap cpu_mem_map(rom, ram, io_registers);
     CPU cpu(cpu_mem_map);
-    PPU ppu(ram, cpu);
+    PPU ppu(io_registers, cpu);
     Screen screen(renderer);
     cpu.init();
     ppu.load_chr_rom(rom);

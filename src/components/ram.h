@@ -17,15 +17,11 @@ class RAM : public IMemory
 {
 public:
     RAM(size_t size);
-    RAM(size_t size, std::vector<ram_range> ranges);
 
     unsigned char get_value_at(const uint16_t& address);
     void set_value_at(const uint16_t& address, const unsigned char& value);
 private:
     std::vector<unsigned char> mem_array;
-    std::vector<ram_range> m_ranges;
-
-    uint16_t get_physical_address(const uint16_t& address);
 };
 
 #endif // RAM_H
