@@ -16,7 +16,8 @@ const float CYCLES_PER_FRAME = CPU_FREQ / FRAME_RATE;
 const int CYCLES_PER_FRAME_ACTIVE = CYCLES_PER_FRAME * 240 / 262;
 const int CYCLES_PER_FRAME_VBLANK = CYCLES_PER_FRAME - CYCLES_PER_FRAME_ACTIVE;
 
-bool execute_frame(SDL_Renderer* renderer, CPU& cpu, PPU& ppu, Screen& screen) {
+Frame execute_frame(SDL_Renderer* renderer, CPU& cpu, PPU& ppu, Screen& screen) {
+
     Uint64 start = SDL_GetPerformanceCounter();
 
     ppu.set_vblank(false);
@@ -34,13 +35,13 @@ bool execute_frame(SDL_Renderer* renderer, CPU& cpu, PPU& ppu, Screen& screen) {
 
     SDL_Delay(fmax(floor(16.666f - elapsedMS), 0));
 
-    return true;
+    return frame;
 }
 
 int main()
 {
-    SDL_Window *window = nullptr;
-    SDL_Renderer *renderer = nullptr;
+    SDL_Window* window = nullptr;
+    SDL_Renderer* renderer = nullptr;
     int result = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
     if (result < 0) {
         SDL_Log("SDL_Init error %s", SDL_GetError());
@@ -50,6 +51,9 @@ int main()
         SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
+
+    SDL_Texture* texture = SDL_CreateTexture(renderer,
+                                             SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, 256, 224);
 
 
 
@@ -62,7 +66,7 @@ int main()
     CPU cpu(cpu_mem_map);
     PPUMemoryMap ppu_mem_map(rom);
     PPU ppu(io_registers, cpu, ppu_mem_map);
-    Screen screen(renderer);
+    Screen screen(renderer, texture, 256, 224);
     cpu.init();
     ppu.load_chr_rom(rom);
 
@@ -76,11 +80,13 @@ int main()
         }
 
         if (success) {
-            success = execute_frame(renderer, cpu, ppu, screen);
+            Frame frame = execute_frame(renderer, cpu, ppu, screen);
         }
 
     }
 
+
+    SDL_DestroyTexture(texture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();

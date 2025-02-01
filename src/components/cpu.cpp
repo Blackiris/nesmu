@@ -655,10 +655,9 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         break;
     default:
         std::cout << "Unimplemented opcode: 0x" << std::hex << static_cast<int>(opcode & 0xff) << "." << std::endl;
-        std::cout << (opcode == 0xd8);
     }
 
-    std::cout << std::hex << ori_reg_pc << "->" << std::hex << reg_pc << " " << opcode_to_inst.at(opcode) << std::endl;
+    //std::cout << std::hex << ori_reg_pc << "->" << std::hex << reg_pc << " " << opcode_to_inst.at(opcode) << std::endl;
 
     return cycle;
 }

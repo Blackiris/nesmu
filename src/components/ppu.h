@@ -17,6 +17,9 @@ private:
     RAM& m_io_registers;
     CPU& m_cpu;
     IMemory& m_ppu_mem_map;
+    unsigned char vram_addr;
+
+    int get_vram_addr_incr();
 };
 
 #endif // PPU_H
