@@ -3,6 +3,7 @@
 #include "components/cpu.h"
 #include "components/cpumemorymap.h"
 #include "components/ppu.h"
+#include "components/ppumemorymap.h"
 #include "components/screen.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
@@ -59,7 +60,8 @@ int main()
     RAM ram(0x0800);
     CPUMemoryMap cpu_mem_map(rom, ram, io_registers);
     CPU cpu(cpu_mem_map);
-    PPU ppu(io_registers, cpu);
+    PPUMemoryMap ppu_mem_map(rom);
+    PPU ppu(io_registers, cpu, ppu_mem_map);
     Screen screen(renderer);
     cpu.init();
     ppu.load_chr_rom(rom);

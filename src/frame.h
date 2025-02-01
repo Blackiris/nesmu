@@ -2,7 +2,7 @@
 #define FRAME_H
 
 struct Color {
-    unsigned char r, g, b;
+    unsigned char r=0, g=0, b=0;
 };
 
 struct Frame {
