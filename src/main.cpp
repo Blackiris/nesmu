@@ -29,8 +29,7 @@ Frame execute_frame(SDL_Renderer* renderer, CPU& cpu, PPU& ppu, Screen& screen) 
     }
     cpu.exec_cycle(CYCLES_PER_FRAME_VBLANK);
 
-    Frame frame;
-    frame.colors[10][50] = {0xff, 0x22, 0x00};
+    Frame frame = ppu.render_frame();
     screen.render_frame(frame);
     ppu.set_oam_addr(0);
 

@@ -3,7 +3,7 @@
 #include <iostream>
 
 PPUIORegisters::PPUIORegisters(RAM& oam)
-    : RAM(9), m_oam(oam) {}
+    : RAM(8), m_oam(oam) {}
 
 void PPUIORegisters::set_cpu_memory_map(IMemory* cpu_memory_map) {
     m_cpu_memory_map = cpu_memory_map;
