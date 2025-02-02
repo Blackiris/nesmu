@@ -13,7 +13,7 @@ unsigned char CPUMemoryMap::get_value_at(const uint16_t& address) {
     unsigned char value;
     if (address >= 0x8000) {
         value = m_rom_banks.get_value_at(address - 0x8000);
-    } else if (address >= 0x2000) {
+    } else if (address >= 0x2000 && address < 0x4000) {
         value = m_io_registers.get_value_at((address - 0x2000) % 0x8);
     } else {
         value = m_ram.get_value_at(address % 0x0800);
@@ -23,9 +23,9 @@ unsigned char CPUMemoryMap::get_value_at(const uint16_t& address) {
 void CPUMemoryMap::set_value_at(const uint16_t& address, const unsigned char& value) {
     if (address >= 0x8000) {
         // No write on ROM banks
-    } else if (address >= 0x4000 && address < 0x4020) {
+    } else if (address == 0x4014) {
         m_io_registers.set_value_at(0x8, value);
-    } else if (address >= 0x2000) {
+    } else if (address >= 0x2000 && address < 0x4000) {
         m_io_registers.set_value_at((address - 0x2000) % 0x8, value);
     } else {
         m_ram.set_value_at(address % 0x0800, value);

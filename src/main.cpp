@@ -17,7 +17,7 @@ const float CYCLES_PER_FRAME = CPU_FREQ / FRAME_RATE;
 const int CYCLES_PER_FRAME_ACTIVE = CYCLES_PER_FRAME * 240 / 262;
 const int CYCLES_PER_FRAME_VBLANK = CYCLES_PER_FRAME - CYCLES_PER_FRAME_ACTIVE;
 
-Frame execute_frame(SDL_Renderer* renderer, CPU& cpu, PPU& ppu, Screen& screen) {
+void execute_frame(CPU& cpu, PPU& ppu, Screen& screen) {
 
     Uint64 start = SDL_GetPerformanceCounter();
 
@@ -37,8 +37,6 @@ Frame execute_frame(SDL_Renderer* renderer, CPU& cpu, PPU& ppu, Screen& screen) 
     float elapsedMS = (end - start) / (float)SDL_GetPerformanceFrequency() * 1000.0f;
 
     SDL_Delay(fmax(floor(16.666f - elapsedMS), 0));
-
-    return frame;
 }
 
 int main()
@@ -64,12 +62,13 @@ int main()
     RomLoader romLoader;
     ROM rom = romLoader.read_rom_from_disk("pacman.nes");
     RAM oam(256);
-    PPUIORegisters io_registers(oam);
+    RAM vram(16384);
+    PPUIORegisters io_registers(oam, vram);
     RAM ram(0x0800);
     CPUMemoryMap cpu_mem_map(rom, ram, io_registers);
     io_registers.set_cpu_memory_map(&cpu_mem_map);
     CPU cpu(cpu_mem_map);
-    PPUMemoryMap ppu_mem_map(rom);
+    PPUMemoryMap ppu_mem_map(rom, vram);
     PPU ppu(io_registers, ppu_mem_map, oam);
     Screen screen(renderer, texture, 256, 224);
     cpu.init();
@@ -85,7 +84,7 @@ int main()
         }
 
         if (success) {
-            Frame frame = execute_frame(renderer, cpu, ppu, screen);
+            execute_frame(cpu, ppu, screen);
         }
 
     }

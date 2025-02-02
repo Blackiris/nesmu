@@ -25,20 +25,26 @@ void PPU::set_oam_addr(unsigned char value) {
 Frame PPU::render_frame() {
     Frame frame;
 
-    for (int i=0; i<256; i++) {
-        PatternTile pattern_tile = get_tile(i);
-        display_tile_to_frame(pattern_tile, frame, (i%16)*8, (i/16)*8);
-    }
+    render_background(frame);
+    render_sprites(frame);
 
     return frame;
 }
 
-
-
-
-int PPU::get_vram_addr_incr() {
-    return m_io_registers.get_bit_at(PPUCTRL, PPUCTRL_VRAM_ADDR_INCR) ? 32 : 1;
+void PPU::render_background(Frame& frame) {
+    for (int i=0; i<256; i++) {
+        PatternTile pattern_tile = get_tile(i);
+        display_tile_to_frame(pattern_tile, frame, (i%16)*8, (i/16)*8);
+    }
 }
+
+void PPU::render_sprites(Frame& frame) {
+
+}
+
+
+
+
 bool PPU::is_background_rendering_enable() {
     return m_io_registers.get_bit_at(PPUMASK, PPUMASK_BACKGROUND_ENABLED);
 }

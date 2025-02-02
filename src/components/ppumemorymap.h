@@ -9,7 +9,7 @@
 class PPUMemoryMap : public IMemory
 {
 public:
-    PPUMemoryMap(ROM& rom);
+    PPUMemoryMap(ROM& rom, RAM& vram);
 
     unsigned char get_value_at(const uint16_t& address);
     void set_value_at(const uint16_t& address, const unsigned char& value);

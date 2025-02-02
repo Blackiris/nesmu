@@ -27,12 +27,15 @@ private:
     unsigned char vram_addr;
     RAM& m_oam;
 
-    int get_vram_addr_incr();
+
     bool is_background_rendering_enable();
     bool is_sprite_rendering_enable();
 
     PatternTile get_tile(const int& tile_number);
     void display_tile_to_frame(const PatternTile& tile, Frame& frame, int x, int y);
+
+    void render_background(Frame& frame);
+    void render_sprites(Frame& frame);
 };
 
 #endif // PPU_H

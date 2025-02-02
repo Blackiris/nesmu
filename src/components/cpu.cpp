@@ -25,6 +25,7 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0x2c, "BIT Absolute"},
     {0x38, "SEC"},
     {0x3d, "AND Absolute X"},
+    {0x40, "RTI"},
     {0x45, "EOR Zero Page"},
     {0x48, "PHA"},
     {0x4a, "LSR Accumulator"},
@@ -53,6 +54,7 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0xa0, "LDY Immediate"},
     {0xa2, "LDX Immediate"},
     {0xa5, "LDA Zero Page"},
+    {0xa6, "LDX Zero Page"},
     {0xa8, "TAY"},
     {0xa9, "LDA immediate"},
     {0xaa, "TAX"},
@@ -62,10 +64,12 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0xb9, "LDA Absolute Y"},
     {0xb0, "BCS"},
     {0xb1, "LDA Indirect Y"},
+    {0xb5, "LDA Zero Page X"},
     {0xbd, "LDA Absolute X"},
     {0xbe, "LDX Absolute Y"},
     {0xc0, "CPY Immediate"},
     {0xc5, "CMP Zero Page"},
+    {0xc6, "DEC Zero Page"},
     {0xc8, "INY"},
     {0xc9, "CMP Immediate"},
     {0xca, "DEX"},
@@ -84,7 +88,7 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0xf9, "SBC Absolute Y"}
 };
 
-CPU::CPU(IMemory& ram): m_ram(ram), nmi(0) {
+CPU::CPU(IMemory& cpu_mem_map): m_mem_map(cpu_mem_map), nmi(0) {
 
 }
 
@@ -101,12 +105,14 @@ void CPU::set_nmi() {
 bool CPU::exec_cycle(int nb_cycles) {
     if (nmi) {
         nmi = false;
+        push_value_to_stack(reg_pc);
+        push_byte_to_stack(reg_p);
         reg_pc = get_address_from_memory(0xfffa);
     }
 
     int total_cycles = 0;
     while (total_cycles < nb_cycles) {
-        unsigned char opcode = m_ram.get_value_at(reg_pc);
+        unsigned char opcode = m_mem_map.get_value_at(reg_pc);
         short cycle_op = apply_op_code(opcode);
         total_cycles += cycle_op;
     }
@@ -115,8 +121,8 @@ bool CPU::exec_cycle(int nb_cycles) {
 }
 
 uint16_t CPU::get_address_from_memory(const uint16_t& address_1st_byte) {
-    unsigned char byte1 = m_ram.get_value_at(address_1st_byte);
-    unsigned char byte2 = m_ram.get_value_at(address_1st_byte + 1);
+    unsigned char byte1 = m_mem_map.get_value_at(address_1st_byte);
+    unsigned char byte2 = m_mem_map.get_value_at(address_1st_byte + 1);
 
     //std::bitset<8> byte1_bs(byte1);
     //std::bitset<8> byte2_bs(byte2);
@@ -219,15 +225,15 @@ short CPU::apply_op_code(const unsigned char& opcode) {
 
     switch(opcode) {
     case 0x05: //ORA Zero Page
-        addr8 = m_ram.get_value_at(reg_pc+1);
-        value = m_ram.get_value_at(addr8);
+        addr8 = m_mem_map.get_value_at(reg_pc+1);
+        value = m_mem_map.get_value_at(addr8);
         reg_a |= value;
         set_zero_negative_flags(reg_a);
         reg_pc += 2;
         cycle = 3;
         break;
     case 0x09: //ORA Immediate
-        value = m_ram.get_value_at(reg_pc+1);
+        value = m_mem_map.get_value_at(reg_pc+1);
         reg_a |= value;
         set_zero_negative_flags(reg_a);
         reg_pc += 2;
@@ -241,10 +247,9 @@ short CPU::apply_op_code(const unsigned char& opcode) {
     case 0x10: //BPL
         cycle = jump_relative(!get_status_register('N'));
         break;
-    case 0x17: //SLO Zero Page X
-        addr8 = m_ram.get_value_at(reg_pc+1);
-        addr = convert_2_bytes_to_16bits(addr8, reg_y);
-        value = m_ram.get_value_at(addr);
+    case 0x17: //SLO Zero Page X (unofficial)
+        addr8 = m_mem_map.get_value_at(reg_pc+1);
+        value = m_mem_map.get_value_at(addr8 + reg_x);
         shift_left(value);
         reg_a |= value;
         set_zero_negative_flags(reg_a);
@@ -263,15 +268,15 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 6;
         break;
     case 0x25: //AND Zero Page
-        addr8 = m_ram.get_value_at(reg_pc+1);
-        value = m_ram.get_value_at(addr8);
+        addr8 = m_mem_map.get_value_at(reg_pc+1);
+        value = m_mem_map.get_value_at(addr8);
         reg_a &= value;
         set_zero_negative_flags(reg_a);
         reg_pc += 2;
         cycle = 3;
         break;
     case 0x29: //AND Immediate
-        value = m_ram.get_value_at(reg_pc+1);
+        value = m_mem_map.get_value_at(reg_pc+1);
         reg_a &= value;
         set_zero_negative_flags(reg_a);
         reg_pc += 2;
@@ -286,7 +291,7 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         break;
     case 0x2c: //BIT Absolute
         addr = get_address_from_memory(reg_pc+1);
-        value = m_ram.get_value_at(addr);
+        value = m_mem_map.get_value_at(addr);
         res = reg_a & value;
         set_status_register('V', value & 64);
         set_status_register('N', value & 128);
@@ -302,20 +307,24 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         break;
     case 0x3d: //AND Absolute X
         addr = get_address_from_memory(reg_pc+1);
-        reg_a &= m_ram.get_value_at(addr + reg_x);
+        reg_a &= m_mem_map.get_value_at(addr + reg_x);
         set_zero_negative_flags(reg_a);
         reg_pc += 3;
         cycle = 4; //FIXME 5 if page crossed
         break;
+    case 0x40: //RTI
+        reg_p = pull_byte_from_stack();
+        reg_pc = pull_value_from_stack();
+        cycle = 6;
+        break;
     case 0x45: //EOR Zero Page
-        reg_a ^= m_ram.get_value_at(reg_pc);
+        reg_a ^= m_mem_map.get_value_at(reg_pc);
         set_zero_negative_flags(reg_a);
         reg_pc += 2;
         cycle = 3;
         break;
     case 0x48: //PHA
-        m_ram.set_value_at(reg_sp, reg_a);
-        reg_sp -= 1;
+        push_byte_to_stack(reg_a);
         reg_pc += 1;
         cycle = 3;
         break;
@@ -334,21 +343,20 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 6;
         break;
     case 0x65: //ADC Zero Page
-        addr8 = m_ram.get_value_at(reg_pc+1);
-        value = m_ram.get_value_at(addr8);
+        addr8 = m_mem_map.get_value_at(reg_pc+1);
+        value = m_mem_map.get_value_at(addr8);
         add_with_carry(value);
         reg_pc += 2;
         cycle = 3;
         break;
     case 0x68: //PLA
-        reg_sp = 1;
-        reg_a = m_ram.get_value_at(reg_sp);
+        reg_a = pull_byte_from_stack();
         set_zero_negative_flags(reg_a);
         reg_pc += 1;
         cycle = 4;
         break;
     case 0x69: //ADC Immediate
-        value = m_ram.get_value_at(reg_pc+1);
+        value = m_mem_map.get_value_at(reg_pc+1);
         add_with_carry(value);
         reg_pc += 2;
         cycle = 2;
@@ -365,9 +373,9 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         break;
     case 0x7e: //ROR Absolute X
         addr = get_address_from_memory(reg_pc+1);
-        value = m_ram.get_value_at(addr + reg_x);
+        value = m_mem_map.get_value_at(addr + reg_x);
         rotate_right(value);
-        m_ram.set_value_at(addr + reg_x, value);
+        m_mem_map.set_value_at(addr + reg_x, value);
         reg_pc += 3;
         cycle = 7;
         break;
@@ -376,20 +384,20 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 2;
         break;
     case 0x84: //STY Zero Page
-        addr8 = m_ram.get_value_at(reg_pc+1);
-        m_ram.set_value_at(addr8, reg_y);
+        addr8 = m_mem_map.get_value_at(reg_pc+1);
+        m_mem_map.set_value_at(addr8, reg_y);
         reg_pc += 2;
         cycle = 3;
         break;
     case 0x85: //STA Zero Page
-        addr8 = m_ram.get_value_at(reg_pc+1);
-        m_ram.set_value_at(addr8, reg_a);
+        addr8 = m_mem_map.get_value_at(reg_pc+1);
+        m_mem_map.set_value_at(addr8, reg_a);
         reg_pc += 2;
         cycle = 3;
         break;
     case 0x86: //STX Zero Page
-        addr8 = m_ram.get_value_at(reg_pc+1);
-        m_ram.set_value_at(addr8, reg_x);
+        addr8 = m_mem_map.get_value_at(reg_pc+1);
+        m_mem_map.set_value_at(addr8, reg_x);
         reg_pc += 2;
         cycle = 3;
         break;
@@ -409,13 +417,13 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         break;
     case 0x8d: //STA Absolute
         addr = get_address_from_memory(reg_pc+1);
-        m_ram.set_value_at(addr, reg_a);
+        m_mem_map.set_value_at(addr, reg_a);
         reg_pc += 3;
         cycle = 4;
         break;
     case 0x8f: //AAX Absolute
         addr = get_address_from_memory(reg_pc+1);
-        m_ram.set_value_at(addr, reg_a & reg_x);
+        m_mem_map.set_value_at(addr, reg_a & reg_x);
         reg_pc += 3;
         cycle = 4;
         break;
@@ -423,9 +431,9 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = jump_relative(!get_status_register('C'));
         break;
     case 0x91: //STA Indirect Y
-        addr8 = m_ram.get_value_at(reg_pc+1);
+        addr8 = m_mem_map.get_value_at(reg_pc+1);
         addr = convert_2_bytes_to_16bits(addr8, reg_y);
-        m_ram.set_value_at(addr, reg_a);
+        m_mem_map.set_value_at(addr, reg_a);
         reg_pc += 2;
         cycle = 6;
         break;
@@ -437,7 +445,7 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         break;
     case 0x99: //STA Absolute Y
         addr = get_address_from_memory(reg_pc+1);
-        m_ram.set_value_at(addr + reg_y, reg_a);
+        m_mem_map.set_value_at(addr + reg_y, reg_a);
         reg_pc += 3;
         cycle = 5;
         break;
@@ -448,26 +456,33 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         break;
     case 0x9d: //STA Absolute X
         addr = get_address_from_memory(reg_pc+1);
-        m_ram.set_value_at(addr + reg_x, reg_a);
+        m_mem_map.set_value_at(addr + reg_x, reg_a);
         reg_pc += 3;
         cycle = 5;
         break;
     case 0xa0: //LDY Immediate
-        reg_y = m_ram.get_value_at(reg_pc+1);
+        reg_y = m_mem_map.get_value_at(reg_pc+1);
         set_zero_negative_flags(reg_y);
         reg_pc += 2;
         cycle = 2;
         break;
     case 0xa2: //LDX Immediate
-        reg_x = m_ram.get_value_at(reg_pc+1);
+        reg_x = m_mem_map.get_value_at(reg_pc+1);
         set_zero_negative_flags(reg_x);
         reg_pc += 2;
         cycle = 2;
         break;
     case 0xa5: //LDA Zero Page
-        addr8 = m_ram.get_value_at(reg_pc+1);
-        reg_a = m_ram.get_value_at(addr8);
+        addr8 = m_mem_map.get_value_at(reg_pc+1);
+        reg_a = m_mem_map.get_value_at(addr8);
         set_zero_negative_flags(reg_a);
+        reg_pc += 2;
+        cycle = 3;
+        break;
+    case 0xa6: //LDX Zero Page
+        addr8 = m_mem_map.get_value_at(reg_pc+1);
+        reg_x = m_mem_map.get_value_at(addr8);
+        set_zero_negative_flags(reg_x);
         reg_pc += 2;
         cycle = 3;
         break;
@@ -478,7 +493,7 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 2;
         break;
     case 0xa9: //LDA immediate
-        reg_a = m_ram.get_value_at(reg_pc+1);
+        reg_a = m_mem_map.get_value_at(reg_pc+1);
         set_zero_negative_flags(reg_a);
         reg_pc += 2;
         cycle = 2;
@@ -491,21 +506,21 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         break;
     case 0xac: //LDY Absolute
         addr = get_address_from_memory(reg_pc+1);
-        reg_y = m_ram.get_value_at(addr);
+        reg_y = m_mem_map.get_value_at(addr);
         set_zero_negative_flags(reg_y);
         reg_pc += 3;
         cycle = 4;
         break;
     case 0xad: //LDA Absolute
         addr = get_address_from_memory(reg_pc+1);
-        reg_a = m_ram.get_value_at(addr);
+        reg_a = m_mem_map.get_value_at(addr);
         set_zero_negative_flags(reg_a);
         reg_pc += 3;
         cycle = 4;
         break;
     case 0xae: //LDX Absolute
         addr = get_address_from_memory(reg_pc+1);
-        reg_x = m_ram.get_value_at(addr);
+        reg_x = m_mem_map.get_value_at(addr);
         set_zero_negative_flags(reg_x);
         reg_pc += 3;
         cycle = 4;
@@ -514,30 +529,37 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = jump_relative(get_status_register('C'));
         break;
     case 0xb1: //LDA Indirect Y
-        addr8 = m_ram.get_value_at(reg_pc+1);
+        addr8 = m_mem_map.get_value_at(reg_pc+1);
         addr = convert_2_bytes_to_16bits(addr8, reg_y);
-        reg_a = m_ram.get_value_at(addr);
+        reg_a = m_mem_map.get_value_at(addr);
         set_zero_negative_flags(reg_a);
         reg_pc += 2;
         cycle = 5; //FIXME 6 if paged crossed
         break;
+    case 0xb5: //LDA Zero Page X
+        addr8 = m_mem_map.get_value_at(reg_pc+1);
+        reg_a = m_mem_map.get_value_at(addr8 + reg_x);
+        set_zero_negative_flags(reg_a);
+        reg_pc += 2;
+        cycle = 4;
+        break;
     case 0xb9: //LDA Absolute Y
         addr = get_address_from_memory(reg_pc+1);
-        reg_a = m_ram.get_value_at(addr + reg_y);
+        reg_a = m_mem_map.get_value_at(addr + reg_y);
         set_zero_negative_flags(reg_a);
         reg_pc += 3;
         cycle = 4; //FIXME 5 if paged crossed
         break;
     case 0xbd: //LDA Absolute X
         addr = get_address_from_memory(reg_pc+1);
-        reg_a = m_ram.get_value_at(addr + reg_x);
+        reg_a = m_mem_map.get_value_at(addr + reg_x);
         set_zero_negative_flags(reg_x);
         reg_pc += 3;
         cycle = 4; //FIXME or 5 if page crossed
         break;
     case 0xbe: //LDX Absolute Y
         addr = get_address_from_memory(reg_pc+1);
-        reg_x = m_ram.get_value_at(addr + reg_y);
+        reg_x = m_mem_map.get_value_at(addr + reg_y);
         set_zero_negative_flags(reg_x);
         reg_pc += 3;
         cycle = 4; //FIXME or 5 if page crossed
@@ -547,11 +569,21 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         reg_pc += 2;
         break;
     case 0xc5: //CMP Zero Page
-        addr8 = m_ram.get_value_at(reg_pc+1);
-        value = m_ram.get_value_at(addr8);
+        addr8 = m_mem_map.get_value_at(reg_pc+1);
+        value = m_mem_map.get_value_at(addr8);
         cmp(reg_a, value);
         reg_pc += 2;
         cycle = 3;
+        break;
+    case 0xc6: //DEC Zero Page
+        addr8 = m_mem_map.get_value_at(reg_pc+1);
+        value = m_mem_map.get_value_at(addr8);
+        value--;
+        m_mem_map.set_value_at(addr8, value);
+        set_zero_negative_flags(value);
+        std::cout << (int)addr8 << " " << (int)value << " -";
+        reg_pc += 2;
+        cycle = 5;
         break;
     case 0xc8: //INY
         reg_y++;
@@ -570,9 +602,9 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         break;
     case 0xce: //DEC Absolute
         addr = get_address_from_memory(reg_pc+1);
-        value = m_ram.get_value_at(addr);
+        value = m_mem_map.get_value_at(addr);
         value--;
-        m_ram.set_value_at(addr, value);
+        m_mem_map.set_value_at(addr, value);
         set_zero_negative_flags(value);
         reg_pc += 3;
         cycle = 6;
@@ -587,16 +619,16 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         break;
     case 0xd9: //CMP Absolute Y
         addr = get_address_from_memory(reg_pc+1);
-        value = m_ram.get_value_at(addr + reg_y);
+        value = m_mem_map.get_value_at(addr + reg_y);
         cmp(reg_a, value);
         reg_pc += 3;
         cycle = 4; //5 if page crossed
         break;
     case 0xde: //DEC Absolute X
         addr = get_address_from_memory(reg_pc+1);
-        value = m_ram.get_value_at(addr+reg_x);
+        value = m_mem_map.get_value_at(addr+reg_x);
         value--;
-        m_ram.set_value_at(addr+reg_x, value);
+        m_mem_map.set_value_at(addr+reg_x, value);
         set_zero_negative_flags(value);
         reg_pc += 3;
         cycle = 7;
@@ -606,17 +638,17 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         reg_pc += 2;
         break;
     case 0xe4: //CPX Zero Page
-        addr8 = m_ram.get_value_at(reg_pc+1);
-        value = m_ram.get_value_at(addr8);
+        addr8 = m_mem_map.get_value_at(reg_pc+1);
+        value = m_mem_map.get_value_at(addr8);
         cmp(reg_x, value);
         reg_pc += 2;
         cycle = 3;
         break;
     case 0xe6: //INC Zero Page
-        addr8 = m_ram.get_value_at(reg_pc+1);
-        value = m_ram.get_value_at(addr8);
+        addr8 = m_mem_map.get_value_at(reg_pc+1);
+        value = m_mem_map.get_value_at(addr8);
         value--;
-        m_ram.set_value_at(addr8, value);
+        m_mem_map.set_value_at(addr8, value);
         set_zero_negative_flags(value);
 
         reg_pc += 2;
@@ -630,9 +662,9 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         break;
     case 0xee: //INC Absolute
         addr = get_address_from_memory(reg_pc+1);
-        value = m_ram.get_value_at(addr);
+        value = m_mem_map.get_value_at(addr);
         value++;
-        m_ram.set_value_at(addr, value);
+        m_mem_map.set_value_at(addr, value);
         set_zero_negative_flags(value);
         reg_pc += 3;
         cycle = 6;
@@ -647,7 +679,7 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         break;
     case 0xf9: //SBC Absolute Y
         addr = get_address_from_memory(reg_pc+1);
-        value = m_ram.get_value_at(addr + reg_y);
+        value = m_mem_map.get_value_at(addr + reg_y);
         substract_with_carry(value);
 
         reg_pc += 3;
@@ -657,7 +689,9 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         std::cout << "Unimplemented opcode: 0x" << std::hex << static_cast<int>(opcode & 0xff) << "." << std::endl;
     }
 
-    //std::cout << std::hex << ori_reg_pc << "->" << std::hex << reg_pc << " " << opcode_to_inst.at(opcode) << std::endl;
+    if (opcode_to_inst.contains(opcode)) {
+        std::cout << std::hex << ori_reg_pc << "->" << std::hex << reg_pc << " " << opcode_to_inst.at(opcode) << std::endl;
+    }
 
     return cycle;
 }
@@ -666,26 +700,34 @@ int CPU::jump_relative(bool do_jump) {
     int cycle = 2;
     if (do_jump) {
         // do the jump
-        unsigned char offset = m_ram.get_value_at(reg_pc+1);
+        unsigned char offset = m_mem_map.get_value_at(reg_pc+1);
         char* real_offset = reinterpret_cast<char*>(&offset);
-        reg_pc += 2 + *real_offset;
+        reg_pc += *real_offset;
         cycle = 3; //FIXME or 4 if page crossed
-    } else {
-        // do not jump
-        reg_pc += 2;
     }
+    reg_pc += 2;
     return cycle;
 }
 
 void CPU::push_value_to_stack(const uint16_t& value) {
-    m_ram.set_value_at(reg_sp, value & 0x00FF);
-    m_ram.set_value_at(reg_sp+1, (value & 0xFF00) >> 8);
-    reg_sp += 2;
+    m_mem_map.set_value_at(reg_sp, value & 0x00FF);
+    m_mem_map.set_value_at(reg_sp-1, (value & 0xFF00) >> 8);
+    reg_sp -= 2;
+}
+
+void CPU::push_byte_to_stack(const unsigned char& value) {
+    m_mem_map.set_value_at(reg_sp, value);
+    reg_sp -= 1;
 }
 
 uint16_t CPU::pull_value_from_stack() {
-    reg_sp -= 2;
-    return convert_2_bytes_to_16bits(m_ram.get_value_at(reg_sp), m_ram.get_value_at(reg_sp+1));
+    reg_sp += 2;
+    return convert_2_bytes_to_16bits(m_mem_map.get_value_at(reg_sp), m_mem_map.get_value_at(reg_sp-1));
+}
+
+unsigned char CPU::pull_byte_from_stack() {
+    reg_sp += 1;
+    return m_mem_map.get_value_at(reg_sp);
 }
 
 void CPU::cmp(const unsigned char& reg_value, const unsigned char& value) {
@@ -695,7 +737,7 @@ void CPU::cmp(const unsigned char& reg_value, const unsigned char& value) {
 }
 
 int CPU::cmp_immediate(const unsigned char& reg_value) {
-    unsigned char value = m_ram.get_value_at(reg_pc+1);
+    unsigned char value = m_mem_map.get_value_at(reg_pc+1);
     cmp(reg_value, value);
     reg_pc += 2;
     return 2;

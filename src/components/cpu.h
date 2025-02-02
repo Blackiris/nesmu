@@ -6,27 +6,26 @@
 #include <string>
 
 #include "imemory.h"
-#include "../ROM/rom.h"
 
 
 class CPU
 {
 public:
-    CPU(IMemory& ram);
+    CPU(IMemory& cpu_mem_map);
     void init();
     bool exec_cycle(int nb_cycles);
     void set_nmi();
 
 private:
     static const std::map<unsigned char, std::string> opcode_to_inst;
-    IMemory& m_ram;
+    IMemory& m_mem_map;
     bool nmi;
 
     unsigned char reg_a; //accumulator
     unsigned char reg_x;
     unsigned char reg_y;
     uint16_t reg_pc; //program counter
-    unsigned char reg_sp; //stack pointer
+    unsigned char reg_sp = 0; //stack pointer
 
     /**
      * @brief reg_p
@@ -47,6 +46,8 @@ private:
     int jump_relative(bool do_jump);
     void push_value_to_stack(const uint16_t& value);
     uint16_t pull_value_from_stack();
+    void push_byte_to_stack(const unsigned char& value);
+    unsigned char pull_byte_from_stack();
     void cmp(const unsigned char& reg_value, const unsigned char& value);
     int cmp_immediate(const unsigned char& reg_value);
     void set_zero_negative_flags(const unsigned char& value);

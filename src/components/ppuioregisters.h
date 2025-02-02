@@ -20,12 +20,15 @@
 
 #define OAMDATA 0x4
 
+#define PPUADDR 0x6
+#define PPUDATA 0x7
+
 #define OAMDMA 0x8
 
 class PPUIORegisters : public RAM
 {
 public:
-    PPUIORegisters(RAM& oam);
+    PPUIORegisters(RAM& oam, RAM& vram);
 
     void set_cpu_memory_map(IMemory* cpu_memory_map);
 
@@ -34,9 +37,13 @@ public:
 
 private:
     RAM& m_oam;
+    RAM& m_vram;
     IMemory* m_cpu_memory_map;
+    uint16_t m_ppu_addr;
+    unsigned char ppu_data_buffer;
 
     void set_oam_data(const unsigned char& value);
+    int get_vram_addr_incr();
 };
 
 #endif // PPUIOREGISTERS_H

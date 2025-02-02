@@ -1,6 +1,6 @@
 #include "ppumemorymap.h"
 
-PPUMemoryMap::PPUMemoryMap(ROM& rom): m_vram(RAM(16384)) {
+PPUMemoryMap::PPUMemoryMap(ROM& rom, RAM& vram): m_vram(vram) {
     m_vram.set_memory_range(0x0000, rom.chr_rom);
 }
 

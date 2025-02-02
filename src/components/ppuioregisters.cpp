@@ -1,9 +1,8 @@
 #include "ppuioregisters.h"
 
-#include <iostream>
 
-PPUIORegisters::PPUIORegisters(RAM& oam)
-    : RAM(8), m_oam(oam) {}
+PPUIORegisters::PPUIORegisters(RAM& oam, RAM& vram)
+    : RAM(8), m_oam(oam), m_vram(vram) {}
 
 void PPUIORegisters::set_cpu_memory_map(IMemory* cpu_memory_map) {
     m_cpu_memory_map = cpu_memory_map;
@@ -13,6 +12,11 @@ unsigned char PPUIORegisters::get_value_at(const uint16_t& address) {
 
     if (address == OAMDATA) {
         return m_oam.get_value_at(get_value_at(OAMADDR));
+    } else if (address == PPUDATA) {
+        unsigned char val_to_return = ppu_data_buffer;
+        ppu_data_buffer = m_vram.get_value_at(m_ppu_addr);
+        m_ppu_addr += get_vram_addr_incr();
+        return val_to_return;
     }
 
     return RAM::get_value_at(address);
@@ -27,7 +31,11 @@ void PPUIORegisters::set_value_at(const uint16_t& address, const unsigned char& 
         for (int i=0; i<256; i++) {
             set_oam_data(m_cpu_memory_map -> get_value_at(cpu_addr + i));
         }
-
+    } else if (address == PPUADDR) {
+        m_ppu_addr = (m_ppu_addr << 8 | value) & 0x3FFF;
+    } else if (address == PPUDATA) {
+        m_vram.set_value_at(m_ppu_addr, value);
+        m_ppu_addr += get_vram_addr_incr();
     } else {
         RAM::set_value_at(address, value);
     }
@@ -37,4 +45,8 @@ void PPUIORegisters::set_oam_data(const unsigned char& value) {
     unsigned char oamaddr = get_value_at(OAMADDR);
     m_oam.set_value_at(oamaddr, value);
     set_value_at(OAMADDR, oamaddr + 1);
+}
+
+int PPUIORegisters::get_vram_addr_incr() {
+    return RAM::get_bit_at(PPUCTRL, PPUCTRL_VRAM_ADDR_INCR) ? 32 : 1;
 }
