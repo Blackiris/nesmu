@@ -27,11 +27,13 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0x3d, "AND Absolute X"},
     {0x40, "RTI"},
     {0x45, "EOR Zero Page"},
+    {0x46, "LSR Zero Page"},
     {0x48, "PHA"},
     {0x4a, "LSR Accumulator"},
     {0x4c, "JMP Absolute"},
     {0x60, "RTS"},
     {0x65, "ADC Zero Page"},
+    {0x66, "ROR Zero Page"},
     {0x68, "PLA"},
     {0x69, "ADC Immediate"},
     {0x6c, "JMP Indirect"},
@@ -52,7 +54,9 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0x9a, "TXS"},
     {0x9d, "STA Absolute X"},
     {0xa0, "LDY Immediate"},
+    {0xa1, "LDA Indirect X"},
     {0xa2, "LDX Immediate"},
+    {0xa4, "LDY Zero Page"},
     {0xa5, "LDA Zero Page"},
     {0xa6, "LDX Zero Page"},
     {0xa8, "TAY"},
@@ -82,6 +86,7 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0xe4, "CPX Zero Page"},
     {0xe6, "INC Zero Page"},
     {0xe8, "INX"},
+    {0xe9, "SBC Immediate"},
     {0xee, "INC Absolute"},
     {0xf0, "BEQ"},
     {0xf8, "SED"},
@@ -323,6 +328,14 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         reg_pc += 2;
         cycle = 3;
         break;
+    case 0x46: //LSR Zero Page
+        addr8 = m_mem_map.get_value_at(reg_pc+1);
+        value = m_mem_map.get_value_at(addr8);
+        shift_right(value);
+        m_mem_map.set_value_at(addr8, value);
+        reg_pc += 2;
+        cycle = 5;
+        break;
     case 0x48: //PHA
         push_byte_to_stack(reg_a);
         reg_pc += 1;
@@ -348,6 +361,14 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         add_with_carry(value);
         reg_pc += 2;
         cycle = 3;
+        break;
+    case 0x66: //ROR Zero Page
+        addr8 = m_mem_map.get_value_at(reg_pc+1);
+        value = m_mem_map.get_value_at(addr8);
+        rotate_right(value);
+        m_mem_map.set_value_at(addr8, value);
+        reg_pc += 2;
+        cycle = 5;
         break;
     case 0x68: //PLA
         reg_a = pull_byte_from_stack();
@@ -466,11 +487,26 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         reg_pc += 2;
         cycle = 2;
         break;
+    case 0xa1: //LDA Indirect X
+        addr8 = m_mem_map.get_value_at(reg_pc+1);
+        addr = convert_2_bytes_to_16bits(addr8, reg_x);
+        reg_a = m_mem_map.get_value_at(addr);
+        set_zero_negative_flags(reg_a);
+        reg_pc += 2;
+        cycle = 6;
+        break;
     case 0xa2: //LDX Immediate
         reg_x = m_mem_map.get_value_at(reg_pc+1);
         set_zero_negative_flags(reg_x);
         reg_pc += 2;
         cycle = 2;
+        break;
+    case 0xa4: //LDY Zero Page
+        addr8 = m_mem_map.get_value_at(reg_pc+1);
+        reg_y = m_mem_map.get_value_at(addr8);
+        set_zero_negative_flags(reg_y);
+        reg_pc += 2;
+        cycle = 3;
         break;
     case 0xa5: //LDA Zero Page
         addr8 = m_mem_map.get_value_at(reg_pc+1);
@@ -658,6 +694,12 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         reg_x++;
         set_zero_negative_flags(reg_x);
         reg_pc += 1;
+        cycle = 2;
+        break;
+    case 0xe9: //SBC Immediate
+        value = m_mem_map.get_value_at(reg_pc+1);
+        substract_with_carry(value);
+        reg_pc += 2;
         cycle = 2;
         break;
     case 0xee: //INC Absolute
