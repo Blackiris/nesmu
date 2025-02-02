@@ -4,6 +4,7 @@
 #include "components/cpumemorymap.h"
 #include "components/ppu.h"
 #include "components/ppumemorymap.h"
+#include "components/ppuioregisters.h"
 #include "components/screen.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
@@ -23,12 +24,15 @@ Frame execute_frame(SDL_Renderer* renderer, CPU& cpu, PPU& ppu, Screen& screen) 
     ppu.set_vblank(false);
     cpu.exec_cycle(CYCLES_PER_FRAME_ACTIVE);
     ppu.set_vblank(true);
-    ppu.maybe_send_nmi();
+    if (ppu.maybe_send_nmi()) {
+        cpu.set_nmi();
+    }
     cpu.exec_cycle(CYCLES_PER_FRAME_VBLANK);
 
     Frame frame;
     frame.colors[10][50] = {0xff, 0x22, 0x00};
     screen.render_frame(frame);
+    ppu.set_oam_addr(0);
 
     Uint64 end = SDL_GetPerformanceCounter();
     float elapsedMS = (end - start) / (float)SDL_GetPerformanceFrequency() * 1000.0f;
@@ -60,12 +64,14 @@ int main()
 
     RomLoader romLoader;
     ROM rom = romLoader.read_rom_from_disk("pacman.nes");
-    RAM io_registers(8);
+    RAM oam(256);
+    PPUIORegisters io_registers(oam);
     RAM ram(0x0800);
     CPUMemoryMap cpu_mem_map(rom, ram, io_registers);
+    io_registers.set_cpu_memory_map(&cpu_mem_map);
     CPU cpu(cpu_mem_map);
     PPUMemoryMap ppu_mem_map(rom);
-    PPU ppu(io_registers, cpu, ppu_mem_map);
+    PPU ppu(io_registers, ppu_mem_map, oam);
     Screen screen(renderer, texture, 256, 224);
     cpu.init();
     ppu.load_chr_rom(rom);

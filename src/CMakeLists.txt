@@ -7,7 +7,8 @@ add_executable(${PROJECT_NAME}
     components/cpumemorymap.h components/cpumemorymap.cpp
     components/imemory.h
     components/imemory.cpp
-    components/ppumemorymap.h components/ppumemorymap.cpp  )
+    components/ppumemorymap.h components/ppumemorymap.cpp
+    components/ppuioregisters.h components/ppuioregisters.cpp  )
 target_sources(${PROJECT_NAME} PRIVATE main.cpp
     ROM/romloader.h ROM/romloader.cpp
 
