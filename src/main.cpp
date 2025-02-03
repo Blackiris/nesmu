@@ -61,11 +61,12 @@ int main()
 
     RomLoader romLoader;
     ROM rom = romLoader.read_rom_from_disk("pacman.nes");
-    RAM oam(256);
-    RAM vram(16384);
+    RAM oam(0xf00);
+    RAM vram(0x4000);
     PPUIORegisters io_registers(oam, vram);
+    RAM papu_io_registers(0xf0);
     RAM ram(0x0800);
-    CPUMemoryMap cpu_mem_map(rom, ram, io_registers);
+    CPUMemoryMap cpu_mem_map(rom, ram, io_registers, papu_io_registers);
     io_registers.set_cpu_memory_map(&cpu_mem_map);
     CPU cpu(cpu_mem_map);
     PPUMemoryMap ppu_mem_map(rom, vram);
@@ -86,15 +87,12 @@ int main()
         if (success) {
             execute_frame(cpu, ppu, screen);
         }
-
     }
-
 
     SDL_DestroyTexture(texture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
-
 
     return 0;
 }

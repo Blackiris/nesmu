@@ -22,6 +22,7 @@ public:
     void set_value_at(const uint16_t& address, const unsigned char& value);
 private:
     std::vector<unsigned char> mem_array;
+    size_t m_size;
 };
 
 #endif // RAM_H

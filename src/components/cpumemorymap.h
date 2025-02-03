@@ -5,10 +5,14 @@
 #include "imemory.h"
 #include "ram.h"
 
+#define CPU_SPRDMA 0x4014
+#define CPU_JOYPAD1 0x4016
+#define CPU_JOYPAD2 0x4017
+
 class CPUMemoryMap : public IMemory
 {
 public:
-    CPUMemoryMap(ROM& rom, RAM& ram, RAM& io_registers);
+    CPUMemoryMap(ROM& rom, RAM& ram, RAM& io_registers, RAM& papu_io_registers);
 
     unsigned char get_value_at(const uint16_t& address);
     void set_value_at(const uint16_t& address, const unsigned char& value);
@@ -17,6 +21,7 @@ private:
     RAM m_rom_banks;
     RAM& m_ram;
     RAM& m_io_registers;
+    RAM& m_papu_io_registers;
 };
 
 #endif // CPUMEMORYMAP_H
