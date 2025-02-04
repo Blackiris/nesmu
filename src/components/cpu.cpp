@@ -12,6 +12,7 @@
 
 const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0x05, "ORA Zero Page"},
+    {0x06, "ASL Zero Page"},
     {0x09, "ORA Immediate"},
     {0x0a, "ASL Accumulator"},
     {0x10, "BPL"},
@@ -23,6 +24,7 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0x29, "AND Immediate"},
     {0x2a, "ROL Accumulator"},
     {0x2c, "BIT Absolute"},
+    {0x30, "BMI"},
     {0x38, "SEC"},
     {0x3d, "AND Absolute X"},
     {0x40, "RTI"},
@@ -39,6 +41,7 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0x6c, "JMP Indirect"},
     {0x6d, "ADC Absolute"},
     {0x78, "SEI"},
+    {0x79, "ADC Absolute Y"},
     {0x7e, "ROR Absolute X"},
     {0x82, "DOP (non official)"},
     {0x84, "STY Zero Page"},
@@ -48,9 +51,11 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0x8a, "TXA"},
     {0x8c, "STY Absolute"},
     {0x8d, "STA Absolute"},
+    {0x8e, "STX Absolute"},
     {0x8f, "AAX Absolute (non official)"},
     {0x90, "BCC"},
     {0x91, "STA Indirect Indexed Y"},
+    {0x95, "STA Zero Page X"},
     {0x98, "TYA"},
     {0x99, "STA Absolute Y"},
     {0x9a, "TXS"},
@@ -71,6 +76,7 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0xb0, "BCS"},
     {0xb1, "LDA Indirect Indexed Y"},
     {0xb5, "LDA Zero Page X"},
+    {0xbc, "LDY Absolute X"},
     {0xbd, "LDA Absolute X"},
     {0xbe, "LDX Absolute Y"},
     {0xc0, "CPY Immediate"},
@@ -79,6 +85,7 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0xc8, "INY"},
     {0xc9, "CMP Immediate"},
     {0xca, "DEX"},
+    {0xcd, "CMP Absolute"},
     {0xce, "DEC Absolute"},
     {0xd0, "BNE"},
     {0xd8, "CLD"},
@@ -234,6 +241,14 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         reg_pc += 2;
         cycle = 3;
         break;
+    case 0x06: //ASL Zero Page
+        addr8 = m_mem_map.get_value_at(reg_pc+1);
+        value = m_mem_map.get_value_at(addr8);
+        shift_left(value);
+        m_mem_map.set_value_at(addr8, value);
+        reg_pc += 2;
+        cycle = 5;
+        break;
     case 0x09: //ORA Immediate
         value = m_mem_map.get_value_at(reg_pc+1);
         reg_a |= value;
@@ -268,6 +283,17 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         reg_pc = get_address_from_memory(reg_pc+1);
         cycle = 6;
         break;
+    case 0x24: //BIT Zero Page
+        addr = m_mem_map.get_value_at(reg_pc+1);
+        value = m_mem_map.get_value_at(addr);
+        res = reg_a & value;
+        set_status_register('V', value & 64);
+        set_status_register('N', value & 128);
+        set_status_register('Z', res == 0);
+
+        reg_pc += 2;
+        cycle = 3;
+        break;
     case 0x25: //AND Zero Page
         addr8 = m_mem_map.get_value_at(reg_pc+1);
         value = m_mem_map.get_value_at(addr8);
@@ -300,6 +326,9 @@ short CPU::apply_op_code(const unsigned char& opcode) {
 
         reg_pc += 3;
         cycle = 4;
+        break;
+    case 0x30: //BMI
+        cycle = jump_relative(get_status_register('N'));
         break;
     case 0x38: //SEC
         set_status_register('C', true);
@@ -385,7 +414,7 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         break;
     case 0x6d: //ADC Absolute
         addr = get_address_from_memory(reg_pc+1);
-        value = value = m_mem_map.get_value_at(addr);
+        value = m_mem_map.get_value_at(addr);
         add_with_carry(value);
         reg_pc += 3;
         cycle = 4;
@@ -394,6 +423,13 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         enable_status_register('I');
         reg_pc += 1;
         cycle = 2;
+        break;
+    case 0x79: //ADC Absolute Y
+        addr = get_address_from_memory(reg_pc+1);
+        value = m_mem_map.get_value_at(addr+reg_y);
+        add_with_carry(value);
+        reg_pc += 3;
+        cycle = 4; //FIXME 5 if page crossed
         break;
     case 0x7e: //ROR Absolute X
         addr = get_address_from_memory(reg_pc+1);
@@ -451,6 +487,12 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         reg_pc += 3;
         cycle = 4;
         break;
+    case 0x8e: //STX Absolute
+        addr = get_address_from_memory(reg_pc+1);
+        m_mem_map.set_value_at(addr, reg_x);
+        reg_pc += 3;
+        cycle = 4;
+        break;
     case 0x8f: //AAX Absolute
         addr = get_address_from_memory(reg_pc+1);
         m_mem_map.set_value_at(addr, reg_a & reg_x);
@@ -466,6 +508,12 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         m_mem_map.set_value_at(addr+reg_y, reg_a);
         reg_pc += 2;
         cycle = 6;
+        break;
+    case 0x95: //STA Zero Page X
+        addr8 = m_mem_map.get_value_at(reg_pc+1);
+        m_mem_map.set_value_at(addr8+reg_x, reg_a);
+        reg_pc += 2;
+        cycle = 4;
         break;
     case 0x98: //TYA
         reg_a = reg_y;
@@ -595,6 +643,13 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         reg_pc += 3;
         cycle = 4; //FIXME 5 if paged crossed
         break;
+    case 0xbc: //LDY Absolute X
+        addr = get_address_from_memory(reg_pc+1);
+        reg_y = m_mem_map.get_value_at(addr + reg_x);
+        set_zero_negative_flags(reg_y);
+        reg_pc += 3;
+        cycle = 4; //FIXME 5 if paged crossed
+        break;
     case 0xbd: //LDA Absolute X
         addr = get_address_from_memory(reg_pc+1);
         reg_a = m_mem_map.get_value_at(addr + reg_x);
@@ -645,6 +700,13 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         reg_pc += 1;
         cycle = 2;
         break;
+    case 0xcd: //CMP Absolute
+        addr = get_address_from_memory(reg_pc+1);
+        value = m_mem_map.get_value_at(addr);
+        cmp(reg_a, value);
+        reg_pc += 4;
+        cycle = 4;
+        break;
     case 0xce: //DEC Absolute
         addr = get_address_from_memory(reg_pc+1);
         value = m_mem_map.get_value_at(addr);
@@ -692,7 +754,7 @@ short CPU::apply_op_code(const unsigned char& opcode) {
     case 0xe6: //INC Zero Page
         addr8 = m_mem_map.get_value_at(reg_pc+1);
         value = m_mem_map.get_value_at(addr8);
-        value--;
+        value++;
         m_mem_map.set_value_at(addr8, value);
         set_zero_negative_flags(value);
 
@@ -762,30 +824,30 @@ int CPU::jump_relative(bool do_jump) {
 }
 
 void CPU::push_value_to_stack(const uint16_t& value) {
-    m_mem_map.set_value_at(reg_sp-1, value & 0x00FF);
-    m_mem_map.set_value_at(reg_sp, (value & 0xFF00) >> 8);
+    m_mem_map.set_value_at(0x100+reg_sp-1, value & 0x00FF);
+    m_mem_map.set_value_at(0x100+reg_sp, (value & 0xFF00) >> 8);
 
-    //std::cout << "Push " << std::hex << value << std::endl;
+    std::cout << "Push " << std::hex << value << std::endl;
     reg_sp -= 2;
 }
 
 void CPU::push_byte_to_stack(const unsigned char& value) {
-    m_mem_map.set_value_at(reg_sp, value);
-    //std::cout << "Push byte " << std::hex << (int)value << std::endl;
+    m_mem_map.set_value_at(0x100+reg_sp, value);
+    std::cout << "Push byte " << std::hex << (int)value << std::endl;
     reg_sp -= 1;
 }
 
 uint16_t CPU::pull_value_from_stack() {
     reg_sp += 2;
-    uint16_t value = convert_2_bytes_to_16bits(m_mem_map.get_value_at(reg_sp-1), m_mem_map.get_value_at(reg_sp));
-    //std::cout << "Pull " << std::hex << value << std::endl;
+    uint16_t value = convert_2_bytes_to_16bits(m_mem_map.get_value_at(0x100+reg_sp-1), m_mem_map.get_value_at(0x100+reg_sp));
+    std::cout << "Pull " << std::hex << value << std::endl;
     return value;
 }
 
 unsigned char CPU::pull_byte_from_stack() {
     reg_sp += 1;
-    unsigned char value = m_mem_map.get_value_at(reg_sp);
-    //std::cout << "Pull byte " << std::hex << (int)value << std::endl;
+    unsigned char value = m_mem_map.get_value_at(0x100+reg_sp);
+    std::cout << "Pull byte " << std::hex << (int)value << std::endl;
     return value;
 }
 
@@ -834,7 +896,7 @@ void CPU::substract_with_carry(const unsigned char& value) {
 }
 
 void CPU::add_with_carry(const unsigned char& value) {
-    unsigned char to_add = value + (get_status_register('C') ? 0 : 1);
+    unsigned char to_add = value + (get_status_register('C') ? 1 : 0);
     set_status_register('C', 255-to_add < reg_a);
     reg_a = reg_a + to_add;
     set_status_register('V', (reg_a ^ reg_a) & (reg_a ^ ~value) & 0x80); //TODO not sure
