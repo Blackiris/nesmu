@@ -5,7 +5,7 @@
 
 #define PPUCTRL 0x0
 #define PPUCTRL_VRAM_ADDR_INCR 0x2
-#define PPUCTRL_SPRITE_PATTERN_TABLE 0x4
+#define PPUCTRL_SPRITE_PATTERN_TABLE 0x3
 #define PPUCTRL_BACKGROUND_PATTERN_TABLE 0x4
 #define PPUCTRL_SPRITE_SIZE 0x5
 #define PPUCTRL_VBLANK_NMI 0x7
@@ -43,6 +43,8 @@ private:
     IMemory* m_cpu_memory_map;
     uint16_t m_ppu_addr;
     unsigned char ppu_data_buffer;
+
+    bool w = false;
 
     void set_oam_data(const unsigned char& value);
     int get_vram_addr_incr();

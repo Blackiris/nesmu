@@ -70,8 +70,8 @@ const std::map<unsigned char, Color> PPU::color_palette = {
     {0x3f, Color(0x00, 0x00, 0x00)},
 };
 
-PPU::PPU(PPUIORegisters& io_registers, IMemory& vram, RAM& oam): m_io_registers(io_registers),
-    m_ppu_mem_map(vram), m_oam(oam) {}
+PPU::PPU(PPUIORegisters& io_registers, IMemory& ppu_mem_map, RAM& oam): m_io_registers(io_registers),
+    m_ppu_mem_map(ppu_mem_map), m_oam(oam) {}
 
 void PPU::set_vblank(bool enable) {
     m_io_registers.set_bit_at(PPUSTATUS, PPUSTATUS_VBLANK, enable);
@@ -103,18 +103,31 @@ void PPU::render_background(Frame& frame) {
     if (is_background_rendering_enable()) {
 
         uint16_t name_table_addr = 0x2000;
+        uint16_t attr_table_addr = name_table_addr + 0x3c0;
         uint16_t bg_pattern_table = get_background_pattern_table_addr();
         for (int j=0; j<30; j++) {
             for (int i=0; i<32; i++) {
                 unsigned char tile_id = m_ppu_mem_map.get_value_at(name_table_addr+i+j*32);
                 PatternTile pattern_tile = get_pattern_tile(bg_pattern_table, tile_id);
-                display_tile_to_frame(pattern_tile, frame, i*8, j*8);
+                unsigned char palette_byte = m_ppu_mem_map.get_value_at(attr_table_addr + (i/4) + (j/4)*8);
+                unsigned char palette = palette_byte;
+                if (j%2 == 0) {
+                    palette &= 0b00001111;
+                } else {
+                    palette >>= 4;
+                }
+                if (i%2 == 0) {
+                    palette &= 0b0011;
+                } else {
+                    palette >>= 2;
+                }
+                display_tile_to_frame(pattern_tile, frame, palette, true, i*8, j*8, false, false);
             }
         }
-        for (int i=0; i<256; i++) {
+        /*for (int i=0; i<256; i++) {
             PatternTile pattern_tile = get_pattern_tile(0x0, i);
-            display_tile_to_frame(pattern_tile, frame, (i%16)*8, (i/16)*8);
-        }
+            display_tile_to_frame(pattern_tile, frame, 0, true, (i%16)*8, (i/16)*8, false, false);
+        }*/
     }
 }
 
@@ -125,9 +138,13 @@ void PPU::render_sprites(Frame& frame) {
             unsigned char x = m_oam.get_value_at(i*4+3);
             unsigned char y = m_oam.get_value_at(i*4);
             unsigned char tile_id = m_oam.get_value_at(i*4+1);
+            unsigned char attributes = m_oam.get_value_at(i*4+2);
+            bool flip_h = (attributes & 0b01000000) > 0;
+            bool flip_v = (attributes & 0b10000000) > 0;
+            unsigned char palette = attributes & 0b11;
 
             PatternTile pattern_tile = get_pattern_tile(spr_pattern_table, tile_id);
-            display_tile_to_frame(pattern_tile, frame, x, y);
+            display_tile_to_frame(pattern_tile, frame, palette, false, x, y-1, flip_h, flip_v);
         }
 
     }
@@ -161,18 +178,31 @@ PatternTile PPU::get_pattern_tile(const uint16_t& pattern_table_addr, const int&
     return pattern_tile;
 }
 
-void PPU::display_tile_to_frame(const PatternTile& pattern_tile, Frame& frame, int x, int y) {
+void PPU::display_tile_to_frame(const PatternTile& pattern_tile, Frame& frame, const unsigned char& palette, bool is_background, int x, int y, bool flip_h, bool flip_v) {
+    uint16_t base_palette_addr = (is_background ? 0x3f00 : 0x3f10) + palette * 0x4;
     for (unsigned char j=0; j<8; j++) {
         for (unsigned char i=0; i<8; i++) {
-            Color color;
-            unsigned char pixel_indice = pattern_tile.pixels[i][j];
+
+            unsigned char final_i = flip_h ? 8-i : i;
+            unsigned char final_j = flip_v ? 8-j : j;
+            unsigned char pixel_indice = pattern_tile.pixels[final_i][final_j];
+
+            if (pixel_indice > 0) {
+                unsigned char color_indice = m_ppu_mem_map.get_value_at(base_palette_addr + pixel_indice);
+                Color color = color_palette.at(color_indice);
+
+                if (x+i < frame.width && y+j < frame.height) {
+                    frame.colors[x+i][y+j] = color;
+                }
+            }
+
+            /*Color color;
             color.r = pixel_indice * 0x70;
             color.g = pixel_indice * 0x70;
             color.b = pixel_indice * 0x70;
-
             if (x+i < frame.width && y+j < frame.height) {
                 frame.colors[x+i][y+j] = color;
-            }
+            }*/
         }
     }
 }

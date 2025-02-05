@@ -54,6 +54,7 @@ private:
     void shift_left(unsigned char& val);
     void shift_right(unsigned char& val);
     void rotate_right(unsigned char& val);
+    void rotate_left(unsigned char& val);
     void substract_with_carry(const unsigned char& value);
     void add_with_carry(const unsigned char& value);
 };

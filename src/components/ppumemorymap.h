@@ -15,7 +15,7 @@ public:
     void set_value_at(const uint16_t& address, const unsigned char& value);
 
 private:
-    RAM m_vram;
+    RAM& m_vram;
 };
 
 #endif // PPUMEMORYMAP_H

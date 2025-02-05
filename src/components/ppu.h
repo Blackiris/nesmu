@@ -16,7 +16,7 @@ struct PatternTile {
 class PPU
 {
 public:
-    PPU(PPUIORegisters& io_registers, IMemory& vram, RAM& oam);
+    PPU(PPUIORegisters& io_registers, IMemory& ppu_mem_map, RAM& oam);
     void set_vblank(bool enable);
     bool maybe_send_nmi();
     void load_chr_rom(const ROM& rom);
@@ -35,7 +35,7 @@ private:
     bool is_sprite_rendering_enable();
 
     PatternTile get_pattern_tile(const uint16_t& pattern_table_addr, const int& tile_number);
-    void display_tile_to_frame(const PatternTile& tile, Frame& frame, int x, int y);
+    void display_tile_to_frame(const PatternTile& tile, Frame& frame, const unsigned char& palette, bool is_background, int x, int y, bool flip_h, bool flip_v);
 
     void render_background(Frame& frame);
     void render_sprites(Frame& frame);

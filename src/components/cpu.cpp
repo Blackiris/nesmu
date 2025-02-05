@@ -11,6 +11,7 @@
 #define REGISTER_MASK_N 0b10000000
 
 const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
+    {0x00, "BRK"},
     {0x05, "ORA Zero Page"},
     {0x06, "ASL Zero Page"},
     {0x09, "ORA Immediate"},
@@ -21,6 +22,7 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0x20, "JSR"},
     {0x24, "BIT Zero Page"},
     {0x25, "AND Zero Page"},
+    {0x26, "ROL Zero Page"},
     {0x29, "AND Immediate"},
     {0x2a, "ROL Accumulator"},
     {0x2c, "BIT Absolute"},
@@ -31,8 +33,10 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0x45, "EOR Zero Page"},
     {0x46, "LSR Zero Page"},
     {0x48, "PHA"},
+    {0x49, "EOR Immediate"},
     {0x4a, "LSR Accumulator"},
     {0x4c, "JMP Absolute"},
+    {0x58, "CLI"},
     {0x60, "RTS"},
     {0x65, "ADC Zero Page"},
     {0x66, "ROR Zero Page"},
@@ -233,6 +237,11 @@ short CPU::apply_op_code(const unsigned char& opcode) {
     uint16_t ori_reg_pc = reg_pc;
 
     switch(opcode) {
+    case 0x00: //BRK
+        push_value_to_stack(reg_pc + 2);
+        push_byte_to_stack(reg_p);
+        reg_pc = 0xfffe;
+        break;
     case 0x05: //ORA Zero Page
         addr8 = m_mem_map.get_value_at(reg_pc+1);
         value = m_mem_map.get_value_at(addr8);
@@ -302,6 +311,14 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         reg_pc += 2;
         cycle = 3;
         break;
+    case 0x26: //ROL Zero Page
+        addr8 = m_mem_map.get_value_at(reg_pc+1);
+        value = m_mem_map.get_value_at(addr8);
+        rotate_left(value);
+        m_mem_map.set_value_at(addr8, value);
+        reg_pc += 2;
+        cycle = 5;
+        break;
     case 0x29: //AND Immediate
         value = m_mem_map.get_value_at(reg_pc+1);
         reg_a &= value;
@@ -310,9 +327,7 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 2;
         break;
     case 0x2a: //ROL Accumulator
-        set_status_register('C', reg_a & 0b10000000);
-        reg_a <<= 1;
-        set_zero_negative_flags(reg_a);
+        rotate_left(reg_a);
         reg_pc += 1;
         cycle = 2;
         break;
@@ -348,7 +363,9 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 6;
         break;
     case 0x45: //EOR Zero Page
-        reg_a ^= m_mem_map.get_value_at(reg_pc);
+        addr8 = m_mem_map.get_value_at(reg_pc+1);
+        value = m_mem_map.get_value_at(addr8);
+        reg_a ^= value;
         set_zero_negative_flags(reg_a);
         reg_pc += 2;
         cycle = 3;
@@ -366,6 +383,12 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         reg_pc += 1;
         cycle = 3;
         break;
+    case 0x49: //EOR Immediate
+        reg_a ^= m_mem_map.get_value_at(reg_pc+1);
+        set_zero_negative_flags(reg_a);
+        reg_pc += 2;
+        cycle = 3;
+        break;
     case 0x4a: //LSR Accumulator
         shift_right(reg_a);
         reg_pc += 1;
@@ -374,6 +397,11 @@ short CPU::apply_op_code(const unsigned char& opcode) {
     case 0x4c: //JMP Absolute
         reg_pc = get_address_from_memory(reg_pc+1);
         cycle = 3;
+        break;
+    case 0x58: //CLI
+        set_status_register('I', false);
+        reg_pc += 1;
+        cycle = 2;
         break;
     case 0x60: //RTS
         reg_pc = pull_value_from_stack();
@@ -804,7 +832,7 @@ short CPU::apply_op_code(const unsigned char& opcode) {
     }
 
     if (opcode_to_inst.contains(opcode)) {
-        std::cout << std::hex << ori_reg_pc << "->" << std::hex << reg_pc << " " << opcode_to_inst.at(opcode) << std::endl;
+        //std::cout << std::hex << ori_reg_pc << "->" << std::hex << reg_pc << " " << opcode_to_inst.at(opcode) << std::endl;
     }
 
     return cycle;
@@ -827,27 +855,27 @@ void CPU::push_value_to_stack(const uint16_t& value) {
     m_mem_map.set_value_at(0x100+reg_sp-1, value & 0x00FF);
     m_mem_map.set_value_at(0x100+reg_sp, (value & 0xFF00) >> 8);
 
-    std::cout << "Push " << std::hex << value << std::endl;
+    //std::cout << "Push " << std::hex << value << std::endl;
     reg_sp -= 2;
 }
 
 void CPU::push_byte_to_stack(const unsigned char& value) {
     m_mem_map.set_value_at(0x100+reg_sp, value);
-    std::cout << "Push byte " << std::hex << (int)value << std::endl;
+    //std::cout << "Push byte " << std::hex << (int)value << std::endl;
     reg_sp -= 1;
 }
 
 uint16_t CPU::pull_value_from_stack() {
     reg_sp += 2;
     uint16_t value = convert_2_bytes_to_16bits(m_mem_map.get_value_at(0x100+reg_sp-1), m_mem_map.get_value_at(0x100+reg_sp));
-    std::cout << "Pull " << std::hex << value << std::endl;
+    //std::cout << "Pull " << std::hex << value << std::endl;
     return value;
 }
 
 unsigned char CPU::pull_byte_from_stack() {
     reg_sp += 1;
     unsigned char value = m_mem_map.get_value_at(0x100+reg_sp);
-    std::cout << "Pull byte " << std::hex << (int)value << std::endl;
+    //std::cout << "Pull byte " << std::hex << (int)value << std::endl;
     return value;
 }
 
@@ -860,7 +888,6 @@ void CPU::cmp(const unsigned char& reg_value, const unsigned char& value) {
 int CPU::cmp_immediate(const unsigned char& reg_value) {
     unsigned char value = m_mem_map.get_value_at(reg_pc+1);
     cmp(reg_value, value);
-    reg_pc += 2;
     return 2;
 }
 
@@ -881,6 +908,14 @@ void CPU::rotate_right(unsigned char& val) {
     set_status_register('C', val & 0b00000001);
     val >>= 1;
     val |= ori_carry * 0b10000000;
+    set_zero_negative_flags(val);
+}
+
+void CPU::rotate_left(unsigned char& val) {
+    bool ori_carry = get_status_register('C');
+    set_status_register('C', val & 0b10000000);
+    val <<= 1;
+    val |= ori_carry * 0b00000001;
     set_zero_negative_flags(val);
 }
 
