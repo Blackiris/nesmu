@@ -166,10 +166,10 @@ PatternTile PPU::get_pattern_tile(const uint16_t& pattern_table_addr, const int&
     for (unsigned char j=0; j<8; j++) {
         for (unsigned char i=0; i<8; i++) {
             unsigned char pixel = 0;
-            if (m_ppu_mem_map.get_bit_at(first_addr+j, 8-i)) {
+            if (m_ppu_mem_map.get_bit_at(first_addr+j, 7-i)) {
                 pixel++;
             }
-            if (m_ppu_mem_map.get_bit_at(first_addr+j+8, 8-i)) {
+            if (m_ppu_mem_map.get_bit_at(first_addr+j+8, 7-i)) {
                 pixel += 2;
             }
             pattern_tile.pixels[i][j] = pixel;

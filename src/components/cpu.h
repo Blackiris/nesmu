@@ -53,6 +53,12 @@ private:
     unsigned char get_zero_page_value();
     unsigned char get_zero_page_value(const unsigned char& to_add);
 
+    unsigned char get_absolute_value();
+    unsigned char get_absolute_value(const unsigned char& to_add);
+
+    unsigned char get_indirect_indexed_value(const unsigned char& to_add);
+
+
     int jump_relative(bool do_jump);
     void cmp(const unsigned char& reg_value, const unsigned char& value);
     int cmp_immediate(const unsigned char& reg_value);
