@@ -43,11 +43,17 @@ private:
     short apply_op_code(const unsigned char& opcode);
     uint16_t get_address_from_memory(const uint16_t& address_1st_byte);
     uint16_t convert_2_bytes_to_16bits(const unsigned char& byte1, const unsigned char& byte2);
-    int jump_relative(bool do_jump);
+
+
     void push_value_to_stack(const uint16_t& value);
     uint16_t pull_value_from_stack();
     void push_byte_to_stack(const unsigned char& value);
     unsigned char pull_byte_from_stack();
+
+    unsigned char get_zero_page_value();
+    unsigned char get_zero_page_value(const unsigned char& to_add);
+
+    int jump_relative(bool do_jump);
     void cmp(const unsigned char& reg_value, const unsigned char& value);
     int cmp_immediate(const unsigned char& reg_value);
     void set_zero_negative_flags(const unsigned char& value);

@@ -183,8 +183,8 @@ void PPU::display_tile_to_frame(const PatternTile& pattern_tile, Frame& frame, c
     for (unsigned char j=0; j<8; j++) {
         for (unsigned char i=0; i<8; i++) {
 
-            unsigned char final_i = flip_h ? 8-i : i;
-            unsigned char final_j = flip_v ? 8-j : j;
+            unsigned char final_i = flip_h ? 7-i : i;
+            unsigned char final_j = flip_v ? 7-j : j;
             unsigned char pixel_indice = pattern_tile.pixels[final_i][final_j];
 
             if (pixel_indice > 0) {

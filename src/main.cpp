@@ -60,7 +60,7 @@ int main()
 
 
     RomLoader romLoader;
-    ROM rom = romLoader.read_rom_from_disk("SMB.nes");
+    ROM rom = romLoader.read_rom_from_disk("pacman.nes");
     RAM oam(0xf00);
     RAM vram(0x4000);
     PPUIORegisters io_registers(oam, vram);
