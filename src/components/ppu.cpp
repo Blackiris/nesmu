@@ -111,12 +111,12 @@ void PPU::render_background(Frame& frame) {
                 PatternTile pattern_tile = get_pattern_tile(bg_pattern_table, tile_id);
                 unsigned char palette_byte = m_ppu_mem_map.get_value_at(attr_table_addr + (i/4) + (j/4)*8);
                 unsigned char palette = palette_byte;
-                if (j%2 == 0) {
+                if ((j%4)/2 == 0) {
                     palette &= 0b00001111;
                 } else {
                     palette >>= 4;
                 }
-                if (i%2 == 0) {
+                if ((i%4)/2 == 0) {
                     palette &= 0b0011;
                 } else {
                     palette >>= 2;

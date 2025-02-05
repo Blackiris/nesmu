@@ -928,7 +928,12 @@ short CPU::apply_op_code(const unsigned char& opcode) {
     }
 
     if (opcode_to_inst.contains(opcode)) {
-        //std::cout << std::hex << ori_reg_pc << "->" << std::hex << reg_pc << " " << opcode_to_inst.at(opcode) << std::endl;
+        std::cout << std::hex << ori_reg_pc << "->" << std::hex << reg_pc << " " << opcode_to_inst.at(opcode)
+                  << " - a=" << (int)reg_a
+                  << " - x=" << (int)reg_x
+                  << " - y=" << (int)reg_y
+                  << " - p=" << (int)reg_p
+                  << std::endl;
     }
 
     return cycle;
