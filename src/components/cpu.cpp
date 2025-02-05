@@ -1016,7 +1016,7 @@ int CPU::cmp_immediate(const unsigned char& reg_value) {
 }
 
 void CPU::shift_left(unsigned char& val) {
-    set_status_register('C', val & 0b1000000);
+    set_status_register('C', val & 0b10000000);
     val <<= 1;
     set_zero_negative_flags(val);
 }
