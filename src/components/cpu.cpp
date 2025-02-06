@@ -15,6 +15,7 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0x00, "BRK"},
     {0x05, "ORA Zero Page"},
     {0x06, "ASL Zero Page"},
+    {0x07, ""},
     {0x08, "PHP"},
     {0x09, "ORA Immediate"},
     {0x0a, "ASL Accumulator"},
@@ -37,6 +38,7 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0x2e, "ROL Absolute"},
     {0x30, "BMI"},
     {0x38, "SEC"},
+    {0x39, "AND Absolute Y"},
     {0x3d, "AND Absolute X"},
     {0x40, "RTI"},
     {0x45, "EOR Zero Page"},
@@ -410,6 +412,12 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         set_status_register('C', true);
         reg_pc += 1;
         cycle = 2;
+        break;
+    case 0x39: //AND Absolute Y
+        reg_a &= get_absolute_value(reg_y);
+        set_zero_negative_flags(reg_a);
+        reg_pc += 3;
+        cycle = 4; //FIXME 5 if page crossed
         break;
     case 0x3d: //AND Absolute X
         reg_a &= get_absolute_value(reg_x);
@@ -819,7 +827,7 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         break;
     case 0xcd: //CMP Absolute
         cmp(reg_a, get_absolute_value());
-        reg_pc += 4;
+        reg_pc += 3;
         cycle = 4;
         break;
     case 0xce: //DEC Absolute

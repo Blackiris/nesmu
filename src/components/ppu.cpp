@@ -70,6 +70,7 @@ const std::map<unsigned char, Color> PPU::color_palette = {
     {0x3f, Color(0x00, 0x00, 0x00)},
 };
 
+
 PPU::PPU(PPUIORegisters& io_registers, IMemory& ppu_mem_map, RAM& oam): m_io_registers(io_registers),
     m_ppu_mem_map(ppu_mem_map), m_oam(oam) {}
 
@@ -78,7 +79,6 @@ void PPU::set_vblank(bool enable) {
 }
 
 bool PPU::maybe_send_nmi() {
-    // Bit 7 of PPU Control Register 1
     return m_io_registers.get_bit_at(PPUCTRL, PPUCTRL_VBLANK_NMI);
 }
 
@@ -94,8 +94,9 @@ Frame PPU::render_frame() {
     Frame frame;
 
     draw_backdrop_color(frame);
-    render_background(frame);
-    render_sprites(frame);
+    CollisionMask bg_collision_mask = render_background(frame);
+    bool sprite_0_collision = render_sprites(frame, bg_collision_mask);
+    m_io_registers.set_bit_at(PPUSTATUS, PPUSTATUS_SPRINT_0, sprite_0_collision);
 
     return frame;
 }
@@ -111,7 +112,8 @@ void PPU::draw_backdrop_color(Frame& frame) {
     }
 }
 
-void PPU::render_background(Frame& frame) {
+CollisionMask PPU::render_background(Frame& frame) {
+    CollisionMask collision_mask;
     if (is_background_rendering_enable()) {
 
         uint16_t name_table_addr = 0x2000;
@@ -133,17 +135,16 @@ void PPU::render_background(Frame& frame) {
                 } else {
                     palette >>= 2;
                 }
-                display_tile_to_frame(pattern_tile, frame, palette, true, i*8, j*8, false, false);
+                display_bg_tile_to_frame(pattern_tile, frame, collision_mask, palette, i*8, j*8);
             }
         }
-        /*for (int i=0; i<256; i++) {
-            PatternTile pattern_tile = get_pattern_tile(0x0, i);
-            display_tile_to_frame(pattern_tile, frame, 0, true, (i%16)*8, (i/16)*8, false, false);
-        }*/
     }
+
+    return collision_mask;
 }
 
-void PPU::render_sprites(Frame& frame) {
+bool PPU::render_sprites(Frame& frame, const CollisionMask& bg_collision_mask) {
+    bool collision = false;
     if (is_sprite_rendering_enable()) {
         uint16_t spr_pattern_table = get_sprite_pattern_table_addr();
         for (int i = 63; i>=0; i--) {
@@ -156,12 +157,12 @@ void PPU::render_sprites(Frame& frame) {
             unsigned char palette = attributes & 0b11;
 
             PatternTile pattern_tile = get_pattern_tile(spr_pattern_table, tile_id);
-            display_tile_to_frame(pattern_tile, frame, palette, false, x, y-1, flip_h, flip_v);
+
+            collision = display_sprite_tile_to_frame(pattern_tile, frame, i==0, bg_collision_mask, palette, x, y-1, flip_h, flip_v);
         }
-
     }
+    return collision;
 }
-
 
 
 
@@ -190,14 +191,12 @@ PatternTile PPU::get_pattern_tile(const uint16_t& pattern_table_addr, const int&
     return pattern_tile;
 }
 
-void PPU::display_tile_to_frame(const PatternTile& pattern_tile, Frame& frame, const unsigned char& palette, bool is_background, int x, int y, bool flip_h, bool flip_v) {
-    uint16_t base_palette_addr = (is_background ? 0x3f00 : 0x3f10) + palette * 0x4;
+void PPU::display_bg_tile_to_frame(const PatternTile& pattern_tile, Frame& frame, CollisionMask& collision_mask,
+                                   const unsigned char& palette, const unsigned char& x, const unsigned char& y) {
+    uint16_t base_palette_addr = 0x3f00 + palette * 0x4;
     for (unsigned char j=0; j<8; j++) {
         for (unsigned char i=0; i<8; i++) {
-
-            unsigned char final_i = flip_h ? 7-i : i;
-            unsigned char final_j = flip_v ? 7-j : j;
-            unsigned char pixel_indice = pattern_tile.pixels[final_i][final_j];
+            unsigned char pixel_indice = pattern_tile.pixels[i][j];
 
             if (pixel_indice > 0) {
                 unsigned char color_indice = m_ppu_mem_map.get_value_at(base_palette_addr + pixel_indice);
@@ -205,10 +204,40 @@ void PPU::display_tile_to_frame(const PatternTile& pattern_tile, Frame& frame, c
 
                 if (x+i < frame.width && y+j < frame.height) {
                     frame.colors[x+i][y+j] = color;
+                    collision_mask.pixels[x+i][y+j] = true;
                 }
             }
         }
     }
+}
+
+bool PPU::display_sprite_tile_to_frame(const PatternTile& pattern_tile, Frame& frame, bool collision_check, const CollisionMask& bg_collision_mask,
+                                       const unsigned char& palette, const unsigned char& x, const unsigned char& y, bool flip_h, bool flip_v) {
+    uint16_t base_palette_addr = 0x3f10 + palette * 0x4;
+    bool collision = false;
+    for (unsigned char j=0; j<8; j++) {
+        for (unsigned char i=0; i<8; i++) {
+
+            unsigned char final_i = flip_h ? 7-i : i;
+            unsigned char final_j = flip_v ? 7-j : j;
+            unsigned char pixel_indice = pattern_tile.pixels[final_i][final_j];
+            int final_x(x+i);
+            int final_y(y+j);
+
+            if (pixel_indice > 0) {
+                unsigned char color_indice = m_ppu_mem_map.get_value_at(base_palette_addr + pixel_indice);
+                Color color = color_palette.at(color_indice);
+
+                if (final_x < frame.width && final_y < frame.height) {
+                    if (collision_check && bg_collision_mask.pixels[final_x][final_y]) {
+                        collision = true;
+                    }
+                    frame.colors[final_x][final_y] = color;
+                }
+            }
+        }
+    }
+    return collision;
 }
 
 uint16_t PPU::get_background_pattern_table_addr() {
