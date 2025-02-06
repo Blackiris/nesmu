@@ -59,6 +59,7 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0x79, "ADC Absolute Y"},
     {0x7d, "ADC Absolute X"},
     {0x7e, "ROR Absolute X"},
+    {0x81, "STA Indexed Indirect X"},
     {0x82, "DOP (non official)"},
     {0x84, "STY Zero Page"},
     {0x85, "STA Zero Page"},
@@ -106,6 +107,7 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0xce, "DEC Absolute"},
     {0xd0, "BNE"},
     {0xd1, "CMP Indirect Indexed Y"},
+    {0xd5, "CMP Zero Page X"},
     {0xd8, "CLD"},
     {0xd9, "CMP Absolute Y"},
     {0xde, "DEC Absolute X"},
@@ -552,6 +554,13 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         reg_pc += 3;
         cycle = 7;
         break;
+    case 0x81: //STA Indexed Indirect X
+        addr8 = m_mem_map.get_value_at(reg_pc+1);
+        addr = get_address_from_memory(addr8+reg_x);
+        m_mem_map.set_value_at(addr, reg_a);
+        reg_pc += 2;
+        cycle = 6;
+        break;
     case 0x82: //DOP
         reg_pc += 2;
         cycle = 2;
@@ -806,7 +815,7 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 2;
         break;
     case 0xcd: //CMP Absolute
-        value = get_absolute_value(addr);
+        value = get_absolute_value();
         cmp(reg_a, value);
         reg_pc += 4;
         cycle = 4;
@@ -825,9 +834,13 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         break;
     case 0xd1: //CMP Indirect Indexed Y
         cmp(reg_a, get_indirect_indexed_value(reg_y));
-        set_zero_negative_flags(reg_a);
         reg_pc += 2;
         cycle = 5; //FIXME 6 if paged crossed
+        break;
+    case 0xd5: //CMP Zero Page X
+        cmp(reg_a, get_zero_page_value(reg_x));
+        reg_pc += 2;
+        cycle = 4;
         break;
     case 0xd8: //CLD
         clear_status_register('D');
@@ -930,7 +943,6 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 4; //FIXME 5 if page crossed
         break;
     default:
-
         std::cout << std::format("Unimplemented opcode: {:#x}.", opcode) << std::endl;
         exit(1);
     }

@@ -1,5 +1,6 @@
 #include <iostream>
 #include "ROM/romloader.h"
+#include "components/controller.h"
 #include "components/cpu.h"
 #include "components/cpumemorymap.h"
 #include "components/ppu.h"
@@ -59,12 +60,14 @@ int main()
 
     RomLoader romLoader;
     ROM rom = romLoader.read_rom_from_disk("pacman.nes");
+
+    Controller controller_1;
     RAM oam(0xf00);
     RAM vram(0x4000);
     PPUIORegisters io_registers(oam, vram);
     RAM papu_io_registers(0xf0);
     RAM ram(0x0800);
-    CPUMemoryMap cpu_mem_map(rom, ram, io_registers, papu_io_registers);
+    CPUMemoryMap cpu_mem_map(rom, ram, io_registers, papu_io_registers, &controller_1, nullptr);
     io_registers.set_cpu_memory_map(&cpu_mem_map);
     CPU cpu(cpu_mem_map);
     PPUMemoryMap ppu_mem_map(rom, vram);
