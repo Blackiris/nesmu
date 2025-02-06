@@ -268,8 +268,7 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         reg_pc = 0xfffe;
         break;
     case 0x05: //ORA Zero Page
-        value = get_zero_page_value();
-        reg_a |= value;
+        reg_a |= get_zero_page_value();
         set_zero_negative_flags(reg_a);
         reg_pc += 2;
         cycle = 3;
@@ -283,8 +282,7 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 5;
         break;
     case 0x09: //ORA Immediate
-        value = m_mem_map.get_value_at(reg_pc+1);
-        reg_a |= value;
+        reg_a |= m_mem_map.get_value_at(reg_pc+1);
         set_zero_negative_flags(reg_a);
         reg_pc += 2;
         cycle = 2;
@@ -295,8 +293,7 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 2;
         break;
     case 0x0d: //ORA Absolute
-        value = get_absolute_value(reg_pc+1);
-        reg_a |= value;
+        reg_a |= get_absolute_value(reg_pc+1);
         set_zero_negative_flags(reg_a);
         reg_pc += 3;
         cycle = 4;
@@ -305,15 +302,13 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = jump_relative(!get_status_register('N'));
         break;
     case 0x11: //ORA Indirect Indexed Y
-        value = get_indirect_indexed_value(reg_y);
-        reg_a |= value;
+        reg_a |= get_indirect_indexed_value(reg_y);
         set_zero_negative_flags(reg_a);
         reg_pc += 2;
         cycle = 5; //6 if page crossed
         break;
     case 0x15: //ORA Zero Page X
-        value = get_zero_page_value(reg_x);
-        reg_a |= value;
+        reg_a |= get_zero_page_value(reg_x);
         set_zero_negative_flags(reg_a);
         reg_pc += 2;
         cycle = 4;
@@ -349,18 +344,12 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 6;
         break;
     case 0x24: //BIT Zero Page
-        value = get_zero_page_value();
-        res = reg_a & value;
-        set_status_register('V', value & 64);
-        set_status_register('N', value & 128);
-        set_status_register('Z', res == 0);
-
+        bit(get_zero_page_value());
         reg_pc += 2;
         cycle = 3;
         break;
     case 0x25: //AND Zero Page
-        value = get_zero_page_value();
-        reg_a &= value;
+        reg_a &= get_zero_page_value();
         set_zero_negative_flags(reg_a);
         reg_pc += 2;
         cycle = 3;
@@ -374,8 +363,7 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 5;
         break;
     case 0x29: //AND Immediate
-        value = m_mem_map.get_value_at(reg_pc+1);
-        reg_a &= value;
+        reg_a &= m_mem_map.get_value_at(reg_pc+1);
         set_zero_negative_flags(reg_a);
         reg_pc += 2;
         cycle = 2;
@@ -386,12 +374,7 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 2;
         break;
     case 0x2c: //BIT Absolute
-        value = get_absolute_value();
-        res = reg_a & value;
-        set_status_register('V', value & 64);
-        set_status_register('N', value & 128);
-        set_status_register('Z', res == 0);
-
+        bit(get_absolute_value());
         reg_pc += 3;
         cycle = 4;
         break;
@@ -423,8 +406,7 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 6;
         break;
     case 0x45: //EOR Zero Page
-        value = get_zero_page_value();
-        reg_a ^= value;
+        reg_a ^= get_zero_page_value();
         set_zero_negative_flags(reg_a);
         reg_pc += 2;
         cycle = 3;
@@ -471,13 +453,11 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 2;
         break;
     case 0x60: //RTS
-        reg_pc = pull_value_from_stack();
-        reg_pc += 1;
+        reg_pc = pull_value_from_stack() + 1;
         cycle = 6;
         break;
     case 0x65: //ADC Zero Page
-        value = get_zero_page_value();
-        add_with_carry(value);
+        add_with_carry(get_zero_page_value());
         reg_pc += 2;
         cycle = 3;
         break;
@@ -496,8 +476,7 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 4;
         break;
     case 0x69: //ADC Immediate
-        value = m_mem_map.get_value_at(reg_pc+1);
-        add_with_carry(value);
+        add_with_carry(m_mem_map.get_value_at(reg_pc+1));
         reg_pc += 2;
         cycle = 2;
         break;
@@ -512,20 +491,17 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 5;
         break;
     case 0x6d: //ADC Absolute
-        value = get_absolute_value();
-        add_with_carry(value);
+        add_with_carry(get_absolute_value());
         reg_pc += 3;
         cycle = 4;
         break;
     case 0x71: //ADC Indirect Indexed Y
-        value = get_indirect_indexed_value(reg_y);
-        add_with_carry(value);
+        add_with_carry(get_indirect_indexed_value(reg_y));
         reg_pc += 2;
         cycle = 5; //6 if page crossed
         break;
     case 0x75: //ADC Zero Page X
-        value = get_zero_page_value(reg_x);
-        add_with_carry(value);
+        add_with_carry(get_zero_page_value(reg_x));
         reg_pc += 2;
         cycle = 4;
         break;
@@ -535,14 +511,12 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 2;
         break;
     case 0x79: //ADC Absolute Y
-        value = get_absolute_value(reg_y);
-        add_with_carry(value);
+        add_with_carry(get_absolute_value(reg_y));
         reg_pc += 3;
         cycle = 4; //FIXME 5 if page crossed
         break;
     case 0x7d: //ADC Absolute X
-        value = get_absolute_value(reg_x);
-        add_with_carry(value);
+        add_with_carry(get_absolute_value(reg_x));
         reg_pc += 3;
         cycle = 4; //FIXME 5 if page crossed
         break;
@@ -561,7 +535,7 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         reg_pc += 2;
         cycle = 6;
         break;
-    case 0x82: //DOP
+    case 0x82: //DOP (unofficial)
         reg_pc += 2;
         cycle = 2;
         break;
@@ -584,16 +558,14 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 3;
         break;
     case 0x88: //DEY
-        reg_y -= 1;
+        reg_y--;
         set_zero_negative_flags(reg_y);
-
         reg_pc += 1;
         cycle = 2;
         break;
     case 0x8a: //TXA
         reg_a = reg_x;
         set_zero_negative_flags(reg_a);
-
         reg_pc += 1;
         cycle = 2;
         break;
@@ -780,12 +752,12 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 4; //FIXME or 5 if page crossed
         break;
     case 0xc0: //CPY Immediate
-        cycle = cmp_immediate(reg_y);
+        cmp(reg_y, m_mem_map.get_value_at(reg_pc+1));
+        cycle = 2;
         reg_pc += 2;
         break;
     case 0xc5: //CMP Zero Page
-        value = get_zero_page_value();
-        cmp(reg_a, value);
+        cmp(reg_a, get_zero_page_value());
         reg_pc += 2;
         cycle = 3;
         break;
@@ -805,7 +777,8 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 2;
         break;
     case 0xc9: //CMP Immediate
-        cycle = cmp_immediate(reg_a);
+        cmp(reg_a, m_mem_map.get_value_at(reg_pc+1));
+        cycle = 2;
         reg_pc += 2;
         break;
     case 0xca: //DEX
@@ -815,8 +788,7 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 2;
         break;
     case 0xcd: //CMP Absolute
-        value = get_absolute_value();
-        cmp(reg_a, value);
+        cmp(reg_a, get_absolute_value());
         reg_pc += 4;
         cycle = 4;
         break;
@@ -848,8 +820,7 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 2;
         break;
     case 0xd9: //CMP Absolute Y
-        value = get_absolute_value(reg_y);
-        cmp(reg_a, value);
+        cmp(reg_a, get_absolute_value(reg_y));
         reg_pc += 3;
         cycle = 4; //5 if page crossed
         break;
@@ -863,18 +834,17 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 7;
         break;
     case 0xe0: //CPX Immediate
-        cycle = cmp_immediate(reg_x);
+        cmp(reg_x, m_mem_map.get_value_at(reg_pc+1));
         reg_pc += 2;
+        cycle = 2;
         break;
     case 0xe4: //CPX Zero Page
-        value = get_zero_page_value();
-        cmp(reg_x, value);
+        cmp(reg_x, get_zero_page_value());
         reg_pc += 2;
         cycle = 3;
         break;
     case 0xe5: //SBC Zero Page
-        value = get_zero_page_value();
-        substract_with_carry(value);
+        substract_with_carry(get_zero_page_value());
         reg_pc += 2;
         cycle = 3;
         break;
@@ -884,7 +854,6 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         value++;
         m_mem_map.set_value_at(addr8, value);
         set_zero_negative_flags(value);
-
         reg_pc += 2;
         cycle = 5;
         break;
@@ -895,14 +864,12 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 2;
         break;
     case 0xe9: //SBC Immediate
-        value = m_mem_map.get_value_at(reg_pc+1);
-        substract_with_carry(value);
+        substract_with_carry(m_mem_map.get_value_at(reg_pc+1));
         reg_pc += 2;
         cycle = 2;
         break;
     case 0xed: //SBC Absolute
-        value = get_absolute_value();
-        substract_with_carry(value);
+        substract_with_carry(get_absolute_value());
         reg_pc += 3;
         cycle = 4;
         break;
@@ -919,14 +886,12 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = jump_relative(get_status_register('Z'));
         break;
     case 0xf1: //SBC Indirect Indexed Y
-        value = get_indirect_indexed_value(reg_y);
-        substract_with_carry(value);
+        substract_with_carry(get_indirect_indexed_value(reg_y));
         reg_pc += 2;
         cycle = 5; //6 if page crossed
         break;
     case 0xf5: //SBC Zero Page X
-        value = get_zero_page_value(reg_x);
-        substract_with_carry(value);
+        substract_with_carry(get_zero_page_value(reg_x));
         reg_pc += 2;
         cycle = 4;
         break;
@@ -936,9 +901,7 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 2;
         break;
     case 0xf9: //SBC Absolute Y
-        value = get_absolute_value(reg_y);
-        substract_with_carry(value);
-
+        substract_with_carry(get_absolute_value(reg_y));
         reg_pc += 3;
         cycle = 4; //FIXME 5 if page crossed
         break;
@@ -1025,10 +988,11 @@ void CPU::cmp(const unsigned char& reg_value, const unsigned char& value) {
     set_status_register('N', reg_value < value);
 }
 
-int CPU::cmp_immediate(const unsigned char& reg_value) {
-    unsigned char value = m_mem_map.get_value_at(reg_pc+1);
-    cmp(reg_value, value);
-    return 2;
+void CPU::bit(const unsigned char& value) {
+    unsigned char res = reg_a & value;
+    set_status_register('V', value & 0b01000000);
+    set_status_register('N', value & 0b10000000);
+    set_status_register('Z', res == 0);
 }
 
 void CPU::shift_left(unsigned char& val) {

@@ -64,7 +64,7 @@ private:
 
     int jump_relative(bool do_jump);
     void cmp(const unsigned char& reg_value, const unsigned char& value);
-    int cmp_immediate(const unsigned char& reg_value);
+    void bit(const unsigned char& value);
     void set_zero_negative_flags(const unsigned char& value);
     void shift_left(unsigned char& val);
     void shift_right(unsigned char& val);
