@@ -30,13 +30,13 @@ private:
     unsigned char vram_addr;
     RAM& m_oam;
 
-
     bool is_background_rendering_enable();
     bool is_sprite_rendering_enable();
 
     PatternTile get_pattern_tile(const uint16_t& pattern_table_addr, const int& tile_number);
     void display_tile_to_frame(const PatternTile& tile, Frame& frame, const unsigned char& palette, bool is_background, int x, int y, bool flip_h, bool flip_v);
 
+    void draw_backdrop_color(Frame& frame);
     void render_background(Frame& frame);
     void render_sprites(Frame& frame);
 

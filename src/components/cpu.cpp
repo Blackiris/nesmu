@@ -1,6 +1,7 @@
 #include "cpu.h"
 
 #include <iostream>
+#include <format>
 #include <bitset>
 
 #define REGISTER_MASK_C 0b00000001
@@ -250,7 +251,13 @@ short CPU::apply_op_code(const unsigned char& opcode) {
     uint16_t addr;
     unsigned char addr8;
     unsigned char value, res;
-    uint16_t ori_reg_pc = reg_pc;
+
+    /*if (opcode_to_inst.contains(opcode)) {
+        std::cout << std::format("{} {:#x} {} - a={:#x} x={:#x} y={:#x} p={:#x}",
+                                 cpu_instructions_nb, reg_pc, opcode_to_inst.at(opcode), reg_a, reg_x, reg_y, reg_p)
+                  << std::endl;
+        cpu_instructions_nb++;
+    }*/
 
     switch(opcode) {
     case 0x00: //BRK
@@ -923,17 +930,9 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 4; //FIXME 5 if page crossed
         break;
     default:
-        std::cout << "Unimplemented opcode: 0x" << std::hex << static_cast<int>(opcode & 0xff) << "." << std::endl;
-        exit(1);
-    }
 
-    if (opcode_to_inst.contains(opcode)) {
-        std::cout << std::hex << ori_reg_pc << "->" << std::hex << reg_pc << " " << opcode_to_inst.at(opcode)
-                  << " - a=" << (int)reg_a
-                  << " - x=" << (int)reg_x
-                  << " - y=" << (int)reg_y
-                  << " - p=" << (int)reg_p
-                  << std::endl;
+        std::cout << std::format("Unimplemented opcode: {:#x}.", opcode) << std::endl;
+        exit(1);
     }
 
     return cycle;
@@ -999,7 +998,7 @@ unsigned char CPU::get_absolute_value() {
 
 unsigned char CPU::get_absolute_value(const unsigned char& to_add) {
     uint16_t addr = get_address_from_memory(reg_pc+1);
-    return m_mem_map.get_value_at(addr + to_add);
+    return m_mem_map.get_value_at(addr + static_cast<uint16_t>(to_add));
 }
 
 unsigned char CPU::get_indirect_indexed_value(const unsigned char& to_add) {

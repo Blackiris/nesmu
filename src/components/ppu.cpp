@@ -93,10 +93,22 @@ void PPU::set_oam_addr(unsigned char value) {
 Frame PPU::render_frame() {
     Frame frame;
 
+    draw_backdrop_color(frame);
     render_background(frame);
     render_sprites(frame);
 
     return frame;
+}
+
+void PPU::draw_backdrop_color(Frame& frame) {
+    unsigned char color_indice = m_ppu_mem_map.get_value_at(0x3f00);
+    Color color = color_palette.at(color_indice);
+
+    for (int i=0; i<frame.width; i++) {
+        for (int j=0; j<frame.height; j++) {
+            frame.colors[i][j] = color;
+        }
+    }
 }
 
 void PPU::render_background(Frame& frame) {
@@ -195,14 +207,6 @@ void PPU::display_tile_to_frame(const PatternTile& pattern_tile, Frame& frame, c
                     frame.colors[x+i][y+j] = color;
                 }
             }
-
-            /*Color color;
-            color.r = pixel_indice * 0x70;
-            color.g = pixel_indice * 0x70;
-            color.b = pixel_indice * 0x70;
-            if (x+i < frame.width && y+j < frame.height) {
-                frame.colors[x+i][y+j] = color;
-            }*/
         }
     }
 }

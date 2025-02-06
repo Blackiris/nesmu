@@ -7,7 +7,7 @@
 class Screen
 {
 public:
-    Screen(SDL_Renderer* renderer, SDL_Texture* texture, unsigned int width, unsigned int height);
+    Screen(SDL_Renderer* renderer, unsigned int width, unsigned int height);
     ~Screen();
     void render_frame(const Frame& frame);
 private:

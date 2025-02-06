@@ -7,6 +7,13 @@ CPUMemoryMap::CPUMemoryMap(ROM& rom, RAM& ram, RAM& io_registers, RAM& papu_io_r
     if (rom.prg_rom.size() == 16384) {
         m_rom_banks.set_memory_range(0x4000, rom.prg_rom);
     }
+
+
+    // Init ram 0x0 to 0x800 excluded
+    for (int16_t i=0x0; i<0x800; i++) {
+        unsigned char val = (i/4)%2 ? 0xff : 0x00;
+        m_ram.set_value_at(i, val);
+    }
 }
 
 unsigned char CPUMemoryMap::get_value_at(const uint16_t& address) {

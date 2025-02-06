@@ -21,11 +21,14 @@ private:
     IMemory& m_mem_map;
     bool nmi;
 
-    unsigned char reg_a; //accumulator
-    unsigned char reg_x;
-    unsigned char reg_y;
+    unsigned char reg_a = 0; //accumulator
+    unsigned char reg_x = 0;
+    unsigned char reg_y = 0;
     uint16_t reg_pc; //program counter
     unsigned char reg_sp = 0; //stack pointer
+
+    // For debug
+    long cpu_instructions_nb = 0;
 
     /**
      * @brief reg_p

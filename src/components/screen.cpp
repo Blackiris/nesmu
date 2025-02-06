@@ -3,8 +3,10 @@
 
 #include <iostream>
 
-Screen::Screen(SDL_Renderer* renderer, SDL_Texture* texture, unsigned int width, unsigned int height)
-    : m_width(width), m_height(height), m_renderer(renderer), m_texture(texture) {
+Screen::Screen(SDL_Renderer* renderer, unsigned int width, unsigned int height)
+    : m_width(width), m_height(height), m_renderer(renderer) {
+
+    m_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, width, height);
     m_pixels = new Uint32[width * height];
 }
 
@@ -25,5 +27,6 @@ void Screen::render_frame(const Frame& frame) {
 
 Screen::~Screen() {
     delete[] m_pixels;
+    SDL_DestroyTexture(m_texture);
 }
 

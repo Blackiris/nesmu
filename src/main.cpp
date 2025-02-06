@@ -53,8 +53,6 @@ int main()
         return SDL_APP_FAILURE;
     }
 
-    SDL_Texture* texture = SDL_CreateTexture(renderer,
-                                             SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, 256, 224);
 
 
 
@@ -71,7 +69,7 @@ int main()
     CPU cpu(cpu_mem_map);
     PPUMemoryMap ppu_mem_map(rom, vram);
     PPU ppu(io_registers, ppu_mem_map, oam);
-    Screen screen(renderer, texture, 256, 224);
+    Screen screen(renderer, 256, 224);
     cpu.init();
     ppu.load_chr_rom(rom);
 
@@ -89,7 +87,6 @@ int main()
         }
     }
 
-    SDL_DestroyTexture(texture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
