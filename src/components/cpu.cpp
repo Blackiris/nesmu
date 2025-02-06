@@ -15,6 +15,7 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0x00, "BRK"},
     {0x05, "ORA Zero Page"},
     {0x06, "ASL Zero Page"},
+    {0x08, "PHP"},
     {0x09, "ORA Immediate"},
     {0x0a, "ASL Accumulator"},
     {0x0d, "ORA Absolute"},
@@ -29,6 +30,7 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0x24, "BIT Zero Page"},
     {0x25, "AND Zero Page"},
     {0x26, "ROL Zero Page"},
+    {0x28, "PLP"},
     {0x29, "AND Immediate"},
     {0x2a, "ROL Accumulator"},
     {0x2c, "BIT Absolute"},
@@ -53,6 +55,7 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0x6a, "ROR Accumulator"},
     {0x6c, "JMP Indirect"},
     {0x6d, "ADC Absolute"},
+    {0x6e, "ROR Absolute"},
     {0x71, "ADC Indirect Indexed Y"},
     {0x75, "ADC Zero Page X"},
     {0x78, "SEI"},
@@ -98,6 +101,7 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0xbd, "LDA Absolute X"},
     {0xbe, "LDX Absolute Y"},
     {0xc0, "CPY Immediate"},
+    {0xc4, "CPY Zero Page"},
     {0xc5, "CMP Zero Page"},
     {0xc6, "DEC Zero Page"},
     {0xc8, "INY"},
@@ -108,6 +112,7 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0xd0, "BNE"},
     {0xd1, "CMP Indirect Indexed Y"},
     {0xd5, "CMP Zero Page X"},
+    {0xd6, "DEC Zero Page X"},
     {0xd8, "CLD"},
     {0xd9, "CMP Absolute Y"},
     {0xde, "DEC Absolute X"},
@@ -116,6 +121,7 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0xe6, "INC Zero Page"},
     {0xe8, "INX"},
     {0xe9, "SBC Immediate"},
+    {0xea, "NOP"},
     {0xed, "SBC Absolute"},
     {0xee, "INC Absolute"},
     {0xf0, "BEQ"},
@@ -252,7 +258,7 @@ short CPU::apply_op_code(const unsigned char& opcode) {
     short cycle = 0;
     uint16_t addr;
     unsigned char addr8;
-    unsigned char value, res;
+    unsigned char value;
 
     /*if (opcode_to_inst.contains(opcode)) {
         std::cout << std::format("{} {:#x} {} - a={:#x} x={:#x} y={:#x} p={:#x}",
@@ -280,6 +286,11 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         m_mem_map.set_value_at(addr8, value);
         reg_pc += 2;
         cycle = 5;
+        break;
+    case 0x08: //PHP
+        push_byte_to_stack(reg_p | 0b00110000);
+        reg_pc += 1;
+        cycle = 3;
         break;
     case 0x09: //ORA Immediate
         reg_a |= m_mem_map.get_value_at(reg_pc+1);
@@ -361,6 +372,12 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         m_mem_map.set_value_at(addr8, value);
         reg_pc += 2;
         cycle = 5;
+        break;
+    case 0x28: //PLP
+        reg_p = (pull_byte_from_stack() & 0b11001111) | (reg_p & 0b00110000);
+        reg_pc += 1;
+        cycle = 4;
+        //FIXME The result of changing I is delayed 1 instruction
         break;
     case 0x29: //AND Immediate
         reg_a &= m_mem_map.get_value_at(reg_pc+1);
@@ -494,6 +511,14 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         add_with_carry(get_absolute_value());
         reg_pc += 3;
         cycle = 4;
+        break;
+    case 0x6e: //ROR Absolute
+        addr = get_address_from_memory(reg_pc+1);
+        value = m_mem_map.get_value_at(addr);
+        rotate_right(value);
+        m_mem_map.set_value_at(addr, value);
+        reg_pc += 3;
+        cycle = 6;
         break;
     case 0x71: //ADC Indirect Indexed Y
         add_with_carry(get_indirect_indexed_value(reg_y));
@@ -756,6 +781,11 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 2;
         reg_pc += 2;
         break;
+    case 0xc4: //CPY Zero Page
+        cmp(reg_y, get_zero_page_value());
+        cycle = 2;
+        reg_pc += 3;
+        break;
     case 0xc5: //CMP Zero Page
         cmp(reg_a, get_zero_page_value());
         reg_pc += 2;
@@ -814,6 +844,15 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         reg_pc += 2;
         cycle = 4;
         break;
+    case 0xd6: //DEC Zero Page X
+        addr8 = m_mem_map.get_value_at(reg_pc+1);
+        value = m_mem_map.get_value_at(addr8+reg_x);
+        value--;
+        m_mem_map.set_value_at(addr8+reg_x, value);
+        set_zero_negative_flags(value);
+        reg_pc += 6;
+        cycle = 6;
+        break;
     case 0xd8: //CLD
         clear_status_register('D');
         reg_pc += 1;
@@ -866,6 +905,10 @@ short CPU::apply_op_code(const unsigned char& opcode) {
     case 0xe9: //SBC Immediate
         substract_with_carry(m_mem_map.get_value_at(reg_pc+1));
         reg_pc += 2;
+        cycle = 2;
+        break;
+    case 0xea: //NOP
+        reg_pc += 1;
         cycle = 2;
         break;
     case 0xed: //SBC Absolute

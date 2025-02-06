@@ -30,7 +30,7 @@
 class PPUIORegisters : public RAM
 {
 public:
-    PPUIORegisters(RAM& oam, RAM& vram);
+    PPUIORegisters(RAM& oam, IMemory& vram);
 
     void set_cpu_memory_map(IMemory* cpu_memory_map);
 
@@ -39,7 +39,7 @@ public:
 
 private:
     RAM& m_oam;
-    RAM& m_vram;
+    IMemory& m_vram;
     IMemory* m_cpu_memory_map;
     uint16_t m_ppu_addr;
     unsigned char ppu_data_buffer;

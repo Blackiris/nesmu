@@ -40,8 +40,7 @@ void execute_frame(CPU& cpu, PPU& ppu, Screen& screen) {
     SDL_Delay(fmax(floor(16.666f - elapsedMS), 0));
 }
 
-int main()
-{
+int start_engine(const std::string& rom_name) {
     SDL_Window* window = nullptr;
     SDL_Renderer* renderer = nullptr;
     int result = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
@@ -55,22 +54,20 @@ int main()
     }
 
 
-
-
-
     RomLoader romLoader;
-    ROM rom = romLoader.read_rom_from_disk("pacman.nes");
+    ROM rom = romLoader.read_rom_from_disk(rom_name);
 
     Controller controller_1;
     RAM oam(0xf00);
     RAM vram(0x4000);
-    PPUIORegisters io_registers(oam, vram);
+    PPUMemoryMap ppu_mem_map(rom, vram);
+    PPUIORegisters io_registers(oam, ppu_mem_map);
     RAM papu_io_registers(0xf0);
     RAM ram(0x0800);
     CPUMemoryMap cpu_mem_map(rom, ram, io_registers, papu_io_registers, &controller_1, nullptr);
     io_registers.set_cpu_memory_map(&cpu_mem_map);
     CPU cpu(cpu_mem_map);
-    PPUMemoryMap ppu_mem_map(rom, vram);
+
     PPU ppu(io_registers, ppu_mem_map, oam);
     Screen screen(renderer, 256, 224);
     cpu.init();
@@ -93,8 +90,15 @@ int main()
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
-
     return 0;
+}
+
+int main(int argc, char *argv[]) {
+    if (argc != 2) {
+        std::cout << "Usage: command rom.nes" << std::endl;
+        return 0;
+    }
+    return start_engine(argv[1]);
 }
 
 
