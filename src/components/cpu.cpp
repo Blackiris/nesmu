@@ -19,6 +19,7 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0x09, "ORA Immediate"},
     {0x0a, "ASL Accumulator"},
     {0x0d, "ORA Absolute"},
+    {0x0e, "ASL Absolute"},
     {0x10, "BPL"},
     {0x11, "ORA Indirect Indexed Y"},
     {0x15, "ORA Zero Page X"},
@@ -34,8 +35,11 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0x29, "AND Immediate"},
     {0x2a, "ROL Accumulator"},
     {0x2c, "BIT Absolute"},
+    {0x2d, "AND Absolute"},
     {0x2e, "ROL Absolute"},
     {0x30, "BMI"},
+    {0x35, "AND Zero Page X"},
+    {0x36, "ROL Zero Page X"},
     {0x38, "SEC"},
     {0x39, "AND Absolute Y"},
     {0x3d, "AND Absolute X"},
@@ -48,6 +52,7 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0x4a, "LSR Accumulator"},
     {0x4c, "JMP Absolute"},
     {0x4e, "LSR Absolute"},
+    {0x56, "LSR Zero Page X"},
     {0x58, "CLI"},
     {0x5d, "EOR Absolute X"},
     {0x60, "RTS"},
@@ -61,6 +66,7 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0x6e, "ROR Absolute"},
     {0x71, "ADC Indirect Indexed Y"},
     {0x75, "ADC Zero Page X"},
+    {0x76, "ROR Zero Page X"},
     {0x78, "SEI"},
     {0x79, "ADC Absolute Y"},
     {0x7d, "ADC Absolute X"},
@@ -78,6 +84,7 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0x8f, "AAX Absolute (non official)"},
     {0x90, "BCC"},
     {0x91, "STA Indirect Indexed Y"},
+    {0x94, "STY Zero Page X"},
     {0x95, "STA Zero Page X"},
     {0x98, "TYA"},
     {0x99, "STA Absolute Y"},
@@ -97,6 +104,7 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0xae, "LDX Absolute"},
     {0xb0, "BCS"},
     {0xb4, "LDY Zero Page X"},
+    {0xb6, "LDX Zero Page Y"},
     {0xb9, "LDA Absolute Y"},
     {0xb1, "LDA Indirect Indexed Y"},
     {0xb5, "LDA Zero Page X"},
@@ -110,6 +118,7 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0xc8, "INY"},
     {0xc9, "CMP Immediate"},
     {0xca, "DEX"},
+    {0xcc, "CPY Absolute"},
     {0xcd, "CMP Absolute"},
     {0xce, "DEC Absolute"},
     {0xd0, "BNE"},
@@ -126,6 +135,7 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0xe8, "INX"},
     {0xe9, "SBC Immediate"},
     {0xea, "NOP"},
+    {0xec, "CPX Absolute"},
     {0xed, "SBC Absolute"},
     {0xee, "INC Absolute"},
     {0xf0, "BEQ"},
@@ -133,7 +143,9 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0xf5, "SBC Zero Page X"},
     {0xf6, "INC Zero Page X"},
     {0xf8, "SED"},
-    {0xf9, "SBC Absolute Y"}
+    {0xf9, "SBC Absolute Y"},
+    {0xfd, "SBC Absolute X"},
+    {0xfe, "INC Absolute X"}
 };
 
 CPU::CPU(IMemory& cpu_mem_map): m_mem_map(cpu_mem_map), nmi(0) {
@@ -314,6 +326,14 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         reg_pc += 3;
         cycle = 4;
         break;
+    case 0x0e: //ASL Absolute
+        addr = get_address_from_memory(reg_pc+1);
+        value = m_mem_map.get_value_at(addr);
+        shift_left(value);
+        m_mem_map.set_value_at(addr, value);
+        reg_pc += 3;
+        cycle = 6;
+        break;
     case 0x10: //BPL
         cycle = jump_relative(!get_status_register('N'));
         break;
@@ -400,6 +420,11 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         reg_pc += 3;
         cycle = 4;
         break;
+    case 0x2d: //AND Absolute
+        reg_a &= get_absolute_value();
+        reg_pc += 3;
+        cycle = 4;
+        break;
     case 0x2e: //ROL Absolute
         addr = get_address_from_memory(reg_pc+1);
         value = m_mem_map.get_value_at(addr);
@@ -410,6 +435,20 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         break;
     case 0x30: //BMI
         cycle = jump_relative(get_status_register('N'));
+        break;
+    case 0x35: //AND Zero Page X
+        reg_a &= get_zero_page_value(reg_x);
+        set_zero_negative_flags(reg_a);
+        reg_pc += 2;
+        cycle = 4;
+        break;
+    case 0x36: //ROL Zero Page X
+        addr8 =  m_mem_map.get_value_at(reg_pc+1) + reg_x;
+        value = m_mem_map.get_value_at(addr8);
+        rotate_left(value);
+        m_mem_map.set_value_at(addr8, value);
+        reg_pc += 2;
+        cycle = 6;
         break;
     case 0x38: //SEC
         set_status_register('C', true);
@@ -483,6 +522,14 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         reg_pc += 3;
         cycle = 6;
         break;
+    case 0x56: //LSR Zero Page X
+        addr8 = m_mem_map.get_value_at(reg_pc+1) + reg_x;
+        value = m_mem_map.get_value_at(addr8);
+        shift_right(value);
+        m_mem_map.set_value_at(addr8, value);
+        reg_pc += 2;
+        cycle = 6;
+        break;
     case 0x58: //CLI
         set_status_register('I', false);
         reg_pc += 1;
@@ -554,6 +601,14 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         add_with_carry(get_zero_page_value(reg_x));
         reg_pc += 2;
         cycle = 4;
+        break;
+    case 0x76: //ROR Zero Page X
+        addr8 = m_mem_map.get_value_at(reg_pc+1) + reg_x;
+        value = m_mem_map.get_value_at(addr8);
+        rotate_right(value);
+        m_mem_map.set_value_at(addr8, value);
+        reg_pc += 2;
+        cycle = 6;
         break;
     case 0x78: //SEI
         enable_status_register('I');
@@ -653,9 +708,15 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         reg_pc += 2;
         cycle = 6;
         break;
+    case 0x94: //STY Zero Page X
+        addr8 = m_mem_map.get_value_at(reg_pc+1) + reg_x;
+        m_mem_map.set_value_at(addr8, reg_y);
+        reg_pc += 2;
+        cycle = 4;
+        break;
     case 0x95: //STA Zero Page X
-        addr8 = m_mem_map.get_value_at(reg_pc+1);
-        m_mem_map.set_value_at(addr8+reg_x, reg_a);
+        addr8 = m_mem_map.get_value_at(reg_pc+1) + reg_x;
+        m_mem_map.set_value_at(addr8, reg_a);
         reg_pc += 2;
         cycle = 4;
         break;
@@ -666,8 +727,8 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 2;
         break;
     case 0x99: //STA Absolute Y
-        addr = get_address_from_memory(reg_pc+1);
-        m_mem_map.set_value_at(addr + reg_y, reg_a);
+        addr = get_address_from_memory(reg_pc+1) + reg_y;
+        m_mem_map.set_value_at(addr, reg_a);
         reg_pc += 3;
         cycle = 5;
         break;
@@ -677,8 +738,8 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         reg_pc += 1;
         break;
     case 0x9d: //STA Absolute X
-        addr = get_address_from_memory(reg_pc+1);
-        m_mem_map.set_value_at(addr + reg_x, reg_a);
+        addr = get_address_from_memory(reg_pc+1) + reg_x;
+        m_mem_map.set_value_at(addr, reg_a);
         reg_pc += 3;
         cycle = 5;
         break;
@@ -765,6 +826,12 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         reg_pc += 2;
         cycle = 4;
         break;
+    case 0xb6: //LDX Zero Page Y
+        reg_x = get_zero_page_value(reg_y);
+        set_zero_negative_flags(reg_x);
+        reg_pc += 2;
+        cycle = 4;
+        break;
     case 0xb1: //LDA Indirect Indexed Y
         reg_a = get_indirect_indexed_value(reg_y);
         set_zero_negative_flags(reg_a);
@@ -842,6 +909,11 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         reg_pc += 1;
         cycle = 2;
         break;
+    case 0xcc: //CPY Absolute
+        cmp(reg_y, get_absolute_value());
+        reg_pc += 3;
+        cycle = 4;
+        break;
     case 0xcd: //CMP Absolute
         cmp(reg_a, get_absolute_value());
         reg_pc += 3;
@@ -875,7 +947,7 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         value--;
         m_mem_map.set_value_at(addr8+reg_x, value);
         set_zero_negative_flags(value);
-        reg_pc += 6;
+        reg_pc += 2;
         cycle = 6;
         break;
     case 0xd8: //CLD
@@ -941,6 +1013,11 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         reg_pc += 1;
         cycle = 2;
         break;
+    case 0xec: //CPX Absolute
+        cmp(reg_x, get_absolute_value());
+        reg_pc += 3;
+        cycle = 4;
+        break;
     case 0xed: //SBC Absolute
         substract_with_carry(get_absolute_value());
         reg_pc += 3;
@@ -984,6 +1061,11 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         break;
     case 0xf9: //SBC Absolute Y
         substract_with_carry(get_absolute_value(reg_y));
+        reg_pc += 3;
+        cycle = 4; //FIXME 5 if page crossed
+        break;
+    case 0xfd: //SBC Absolute X
+        substract_with_carry(get_absolute_value(reg_x));
         reg_pc += 3;
         cycle = 4; //FIXME 5 if page crossed
         break;
