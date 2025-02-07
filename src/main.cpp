@@ -48,7 +48,7 @@ int start_engine(const std::string& rom_name) {
         SDL_Log("SDL_Init error %s", SDL_GetError());
     }
 
-    if (!SDL_CreateWindowAndRenderer("Nesmu", 256*2, 224*2, 0, &window, &renderer)) {
+    if (!SDL_CreateWindowAndRenderer("Nesmu", 256*2, 240*2, 0, &window, &renderer)) {
         SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }

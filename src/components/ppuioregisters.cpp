@@ -43,11 +43,11 @@ void PPUIORegisters::set_value_at(const uint16_t& address, const unsigned char& 
         m_ppu_addr += get_vram_addr_incr();
     } else if (address == PPUSCROLL) {
         if (!w) {
-            bool x_bit9 = RAM::get_bit_at(PPUCTRL, PPUCTRL_SCROLL_X_BIT9);
-            ppu_scroll_x = x_bit9 * 0x100 + value;
+            bool x_bit8 = RAM::get_bit_at(PPUCTRL, PPUCTRL_SCROLL_X_BIT8);
+            ppu_scroll_x = x_bit8 * 256 + value;
         } else {
-            bool y_bit9 = RAM::get_bit_at(PPUCTRL, PPUCTRL_SCROLL_Y_BIT9);
-            ppu_scroll_y = y_bit9 * 0x100 + value;
+            bool y_bit8 = RAM::get_bit_at(PPUCTRL, PPUCTRL_SCROLL_Y_BIT8);
+            ppu_scroll_y = y_bit8 * 240 + value;
         }
         w = !w;
     } else {

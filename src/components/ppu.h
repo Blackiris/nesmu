@@ -17,6 +17,12 @@ struct CollisionMask {
     bool pixels[256][224];
 };
 
+struct TileInfo {
+    unsigned char tile_id;
+    unsigned char palette_byte;
+};
+
+
 class PPU
 {
 public:
@@ -70,6 +76,7 @@ private:
 
     void draw_backdrop_color(Frame& frame);
     CollisionMask render_background(Frame& frame);
+    TileInfo get_tile_info_from_nametables(const int& i, const int& j);
 
     /**
      * @brief render_sprites
