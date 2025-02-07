@@ -41,6 +41,15 @@ void PPUIORegisters::set_value_at(const uint16_t& address, const unsigned char& 
         //std::cout << std::hex << m_ppu_addr << " - " << (int)value << std::endl;
         m_vram.set_value_at(m_ppu_addr & 0x3FFF, value);
         m_ppu_addr += get_vram_addr_incr();
+    } else if (address == PPUSCROLL) {
+        if (!w) {
+            bool x_bit9 = RAM::get_bit_at(PPUCTRL, PPUCTRL_SCROLL_X_BIT9);
+            ppu_scroll_x = x_bit9 * 0x100 + value;
+        } else {
+            bool y_bit9 = RAM::get_bit_at(PPUCTRL, PPUCTRL_SCROLL_Y_BIT9);
+            ppu_scroll_y = y_bit9 * 0x100 + value;
+        }
+        w = !w;
     } else {
         RAM::set_value_at(address, value);
     }
@@ -54,4 +63,12 @@ void PPUIORegisters::set_oam_data(const unsigned char& value) {
 
 int PPUIORegisters::get_vram_addr_incr() {
     return RAM::get_bit_at(PPUCTRL, PPUCTRL_VRAM_ADDR_INCR) ? 32 : 1;
+}
+
+unsigned int PPUIORegisters::get_scroll_x() {
+    return ppu_scroll_x;
+}
+
+unsigned int PPUIORegisters::get_scroll_y() {
+    return ppu_scroll_y;
 }
