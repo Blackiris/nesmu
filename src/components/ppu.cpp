@@ -121,8 +121,8 @@ CollisionMask PPU::render_background(Frame& frame) {
         int j_start = y_scroll/8;
 
         uint16_t bg_pattern_table = get_background_pattern_table_addr();
-        for (int j=j_start; j<=j_start+30; j++) {
-            for (int i=i_start; i<=i_start+32; i++) {
+        for (int j=j_start; j<j_start+30; j++) {
+            for (int i=i_start; i<i_start+32; i++) {
                 TileInfo tile_info = get_tile_info_from_nametables(i, j);
                 PatternTile pattern_tile = get_pattern_tile(bg_pattern_table, tile_info.tile_id);
                 unsigned char palette = tile_info.palette_byte;

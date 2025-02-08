@@ -6,9 +6,9 @@ struct Color {
 };
 
 struct Frame {
-    Color colors[256][224];
+    Color colors[256][240];
     int width = 256;
-    int height = 224;
+    int height = 240;
 };
 
 #endif // FRAME_H

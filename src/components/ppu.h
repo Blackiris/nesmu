@@ -14,7 +14,7 @@ struct PatternTile {
 };
 
 struct CollisionMask {
-    bool pixels[256][224];
+    bool pixels[256][240];
 };
 
 struct TileInfo {

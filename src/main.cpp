@@ -69,7 +69,7 @@ int start_engine(const std::string& rom_name) {
     CPU cpu(cpu_mem_map);
 
     PPU ppu(io_registers, ppu_mem_map, oam);
-    Screen screen(renderer, 256, 224);
+    Screen screen(renderer, 256, 240);
     cpu.init();
     ppu.load_chr_rom(rom);
 
