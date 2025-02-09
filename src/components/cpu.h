@@ -59,6 +59,7 @@ private:
     unsigned char get_absolute_value();
     unsigned char get_absolute_value(const unsigned char& to_add);
 
+    unsigned char get_indexed_indirect_value(const unsigned char& to_add);
     unsigned char get_indirect_indexed_value(const unsigned char& to_add);
 
 

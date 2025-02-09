@@ -5,13 +5,11 @@
 #include <map>
 
 #include "ppuioregisters.h"
+#include "ppumemorymap.h"
 #include "../ROM/rom.h"
 #include "../frame.h"
+#include "pattern_tile.h"
 
-
-struct PatternTile {
-    unsigned char pixels[8][8];
-};
 
 struct CollisionMask {
     bool pixels[256][240];
@@ -26,7 +24,7 @@ struct TileInfo {
 class PPU
 {
 public:
-    PPU(PPUIORegisters& io_registers, IMemory& ppu_mem_map, RAM& oam);
+    PPU(PPUIORegisters& io_registers, PPUMemoryMap& ppu_mem_map, RAM& oam);
     void set_vblank(bool enable);
     bool maybe_send_nmi();
     void load_chr_rom(const ROM& rom);
@@ -36,14 +34,12 @@ public:
 private:
     static const std::map<unsigned char, Color> color_palette;
     PPUIORegisters& m_io_registers;
-    IMemory& m_ppu_mem_map;
+    PPUMemoryMap& m_ppu_mem_map;
     unsigned char vram_addr;
     RAM& m_oam;
 
     bool is_background_rendering_enable();
     bool is_sprite_rendering_enable();
-
-    PatternTile get_pattern_tile(const uint16_t& pattern_table_addr, const int& tile_number);
 
     /**
      * @brief display_bg_tile_to_frame

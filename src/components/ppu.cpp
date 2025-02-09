@@ -71,7 +71,7 @@ const std::map<unsigned char, Color> PPU::color_palette = {
 };
 
 
-PPU::PPU(PPUIORegisters& io_registers, IMemory& ppu_mem_map, RAM& oam): m_io_registers(io_registers),
+PPU::PPU(PPUIORegisters& io_registers, PPUMemoryMap& ppu_mem_map, RAM& oam): m_io_registers(io_registers),
     m_ppu_mem_map(ppu_mem_map), m_oam(oam) {}
 
 void PPU::set_vblank(bool enable) {
@@ -120,11 +120,11 @@ CollisionMask PPU::render_background(Frame& frame) {
         int i_start = x_scroll/8;
         int j_start = y_scroll/8;
 
-        uint16_t bg_pattern_table = get_background_pattern_table_addr();
+        uint16_t bg_pattern_table_number = get_background_pattern_table_addr();
         for (int j=j_start; j<j_start+30; j++) {
             for (int i=i_start; i<i_start+32; i++) {
                 TileInfo tile_info = get_tile_info_from_nametables(i, j);
-                PatternTile pattern_tile = get_pattern_tile(bg_pattern_table, tile_info.tile_id);
+                PatternTile pattern_tile = m_ppu_mem_map.get_pattern_tile(bg_pattern_table_number * 256 + tile_info.tile_id);
                 unsigned char palette = tile_info.palette_byte;
                 if ((j%4)/2 == 0) {
                     palette &= 0b00001111;
@@ -178,7 +178,7 @@ bool PPU::render_sprites(Frame& frame, const CollisionMask& bg_collision_mask) {
             bool flip_v = (attributes & 0b10000000) > 0;
             unsigned char palette = attributes & 0b11;
 
-            PatternTile pattern_tile = get_pattern_tile(spr_pattern_table, tile_id);
+            PatternTile pattern_tile = m_ppu_mem_map.get_pattern_tile(spr_pattern_table * 256 + tile_id);
 
             collision = display_sprite_tile_to_frame(pattern_tile, frame, i==0, bg_collision_mask, palette, x, y+1, flip_h, flip_v);
         }
@@ -187,30 +187,11 @@ bool PPU::render_sprites(Frame& frame, const CollisionMask& bg_collision_mask) {
 }
 
 
-
 bool PPU::is_background_rendering_enable() {
     return m_io_registers.get_bit_at(PPUMASK, PPUMASK_BACKGROUND_ENABLED);
 }
 bool PPU::is_sprite_rendering_enable() {
     return m_io_registers.get_bit_at(PPUMASK, PPUMASK_SPRITE_ENABLED);
-}
-
-PatternTile PPU::get_pattern_tile(const uint16_t& pattern_table_addr, const int& tile_number) {
-    PatternTile pattern_tile;
-    uint16_t first_addr = pattern_table_addr + (tile_number << 4);
-    for (unsigned char j=0; j<8; j++) {
-        for (unsigned char i=0; i<8; i++) {
-            unsigned char pixel = 0;
-            if (m_ppu_mem_map.get_bit_at(first_addr+j, 7-i)) {
-                pixel++;
-            }
-            if (m_ppu_mem_map.get_bit_at(first_addr+j+8, 7-i)) {
-                pixel += 2;
-            }
-            pattern_tile.pixels[i][j] = pixel;
-        }
-    }
-    return pattern_tile;
 }
 
 void PPU::display_bg_tile_to_frame(const PatternTile& pattern_tile, Frame& frame, CollisionMask& collision_mask,
@@ -274,10 +255,10 @@ bool PPU::display_sprite_tile_to_frame(const PatternTile& pattern_tile, Frame& f
 }
 
 uint16_t PPU::get_background_pattern_table_addr() {
-    return m_io_registers.get_bit_at(PPUCTRL, PPUCTRL_BACKGROUND_PATTERN_TABLE) ? 0x1000 : 0x0;
+    return m_io_registers.get_bit_at(PPUCTRL, PPUCTRL_BACKGROUND_PATTERN_TABLE) ? 1 : 0;
 }
 
 uint16_t PPU::get_sprite_pattern_table_addr() {
-    return m_io_registers.get_bit_at(PPUCTRL, PPUCTRL_SPRITE_PATTERN_TABLE) ? 0x1000 : 0x0;
+    return m_io_registers.get_bit_at(PPUCTRL, PPUCTRL_SPRITE_PATTERN_TABLE) ? 1 : 0;
 }
 

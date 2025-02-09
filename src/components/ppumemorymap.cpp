@@ -4,6 +4,37 @@
 
 PPUMemoryMap::PPUMemoryMap(ROM& rom, RAM& vram): m_vram(vram) {
     m_vram.set_memory_range(0x0000, rom.chr_rom);
+
+    m_pattern_tiles_cache = new PatternTile[2*256];
+    for (int i=0; i<512; i++) {
+        m_pattern_tiles_cache[i] = load_pattern_tile(i);
+    }
+}
+
+PPUMemoryMap::~PPUMemoryMap() {
+    delete[] m_pattern_tiles_cache;
+}
+
+PatternTile PPUMemoryMap::get_pattern_tile(const int& tile_number) {
+    return m_pattern_tiles_cache[tile_number];
+}
+
+PatternTile PPUMemoryMap::load_pattern_tile(const int& tile_number) {
+    PatternTile pattern_tile;
+    uint16_t first_addr = (tile_number << 4);
+    for (unsigned char j=0; j<8; j++) {
+        for (unsigned char i=0; i<8; i++) {
+            unsigned char pixel = 0;
+            if (get_bit_at(first_addr+j, 7-i)) {
+                pixel++;
+            }
+            if (get_bit_at(first_addr+j+8, 7-i)) {
+                pixel += 2;
+            }
+            pattern_tile.pixels[i][j] = pixel;
+        }
+    }
+    return pattern_tile;
 }
 
 unsigned char PPUMemoryMap::get_value_at(const uint16_t& address) {
