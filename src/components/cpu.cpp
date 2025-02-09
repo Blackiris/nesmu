@@ -215,7 +215,7 @@ void CPU::set_nmi() {
     nmi = true;
 }
 
-bool CPU::exec_cycle(int nb_cycles) {
+int CPU::exec_cycle(int nb_cycles) {
     if (nmi) {
         nmi = false;
         push_value_to_stack(reg_pc);
@@ -230,7 +230,7 @@ bool CPU::exec_cycle(int nb_cycles) {
         total_cycles += cycle_op;
     }
 
-    return total_cycles >= nb_cycles;
+    return total_cycles;
 }
 
 uint16_t CPU::get_address_from_memory(const uint16_t& address_1st_byte) {
@@ -330,12 +330,12 @@ short CPU::apply_op_code(const unsigned char& opcode) {
     unsigned char addr8;
     unsigned char value;
 
-    if (opcode_to_inst.contains(opcode)) {
+    /*if (opcode_to_inst.contains(opcode)) {
         std::cout << std::format("{} {:#x} {} - a={:#x} x={:#x} y={:#x} p={:#x}",
                                  cpu_instructions_nb, reg_pc, opcode_to_inst.at(opcode), reg_a, reg_x, reg_y, reg_p)
                   << std::endl;
         cpu_instructions_nb++;
-    }
+    }*/
 
     switch(opcode) {
     case 0x69: //ADC Immediate

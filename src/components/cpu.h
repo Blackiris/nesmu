@@ -13,7 +13,7 @@ class CPU
 public:
     CPU(IMemory& cpu_mem_map);
     void init();
-    bool exec_cycle(int nb_cycles);
+    int exec_cycle(int nb_cycles);
     void set_nmi();
 
 private:

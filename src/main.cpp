@@ -16,22 +16,32 @@ const float CPU_FREQ = 1789773.0;  // 1.789 Mhz
 const float FRAME_RATE  = 60.0;
 const float CYCLES_PER_FRAME = CPU_FREQ / FRAME_RATE;
 const int CYCLES_PER_FRAME_ACTIVE = CYCLES_PER_FRAME * 240 / 262;
+const int CYCLES_PER_FRAME_ACTIVE_PER_SCANLINE = CYCLES_PER_FRAME / 262;
 const int CYCLES_PER_FRAME_VBLANK = CYCLES_PER_FRAME - CYCLES_PER_FRAME_ACTIVE;
 
 void execute_frame(CPU& cpu, PPU& ppu, Screen& screen) {
-
     Uint64 start = SDL_GetPerformanceCounter();
 
     ppu.set_vblank(false);
-    cpu.exec_cycle(CYCLES_PER_FRAME_ACTIVE);
+    int total_cpu_cycles = 0;
+    int line_number = 0;
+    Frame frame;
+    ppu.draw_backdrop_color(frame);
+    while (total_cpu_cycles < CYCLES_PER_FRAME_ACTIVE) {
+        total_cpu_cycles += cpu.exec_cycle(CYCLES_PER_FRAME_ACTIVE_PER_SCANLINE);
+        if (line_number < frame.height) {
+            ppu.render_frame_scanline(frame, line_number);
+            line_number++;
+        }
+    }
+
+    //frame = ppu.render_frame();
+    screen.render_frame(frame);
     ppu.set_vblank(true);
     if (ppu.maybe_send_nmi()) {
         cpu.set_nmi();
     }
     cpu.exec_cycle(CYCLES_PER_FRAME_VBLANK);
-
-    Frame frame = ppu.render_frame();
-    screen.render_frame(frame);
     ppu.set_oam_addr(0);
 
     Uint64 end = SDL_GetPerformanceCounter();
