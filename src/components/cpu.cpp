@@ -615,10 +615,10 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 5;
         break;
     case 0xd6: //DEC Zero Page X
-        addr8 = m_mem_map.get_value_at(reg_pc+1);
-        value = m_mem_map.get_value_at(addr8+reg_x);
+        addr8 = m_mem_map.get_value_at(reg_pc+1) + reg_x;
+        value = m_mem_map.get_value_at(addr8);
         value--;
-        m_mem_map.set_value_at(addr8+reg_x, value);
+        m_mem_map.set_value_at(addr8, value);
         set_zero_negative_flags(value);
         reg_pc += 2;
         cycle = 6;
@@ -1066,10 +1066,10 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 6;
         break;
     case 0x7e: //ROR Absolute X
-        addr = get_address_from_memory(reg_pc+1);
-        value = m_mem_map.get_value_at(addr + reg_x);
+        addr = get_address_from_memory(reg_pc+1) + reg_x;
+        value = m_mem_map.get_value_at(addr);
         rotate_right(value);
-        m_mem_map.set_value_at(addr + reg_x, value);
+        m_mem_map.set_value_at(addr, value);
         reg_pc += 3;
         cycle = 7;
         break;
@@ -1181,8 +1181,8 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         break;
     case 0x91: //STA Indirect Indexed Y
         addr8 = m_mem_map.get_value_at(reg_pc+1);
-        addr = get_address_from_memory(addr8);
-        m_mem_map.set_value_at(addr+reg_y, reg_a);
+        addr = get_address_from_memory(addr8) + reg_y;
+        m_mem_map.set_value_at(addr, reg_a);
         reg_pc += 2;
         cycle = 6;
         break;

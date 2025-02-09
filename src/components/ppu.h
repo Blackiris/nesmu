@@ -3,6 +3,7 @@
 
 #include "ram.h"
 #include <map>
+#include <vector>
 
 #include "ppuioregisters.h"
 #include "ppumemorymap.h"
@@ -12,7 +13,7 @@
 
 
 struct CollisionMask {
-    bool pixels[256][240];
+    std::vector<bool> pixels;
 };
 
 struct TileInfo {
@@ -60,17 +61,18 @@ private:
      * @param pattern_tile Tile to draw containing indices
      * @param frame Frame
      * @param bg_colision_mask Collision mask to check sprite 0, must be same size as frame
-     * @param collision_check true to enable collision check
      * @param palette Palette id
      * @param x X position of top-left corner
      * @param y Y position of top-left corner
+     * @param priority false in front of background, true behind
      * @param flip_h Enable horizontal flip
      * @param flip_v Enable vertical flip
      * @param line_number scanline to display
      * @return true if collision with background happens when collision_check = true
      */
-    bool display_sprite_tile_to_frame_line(const PatternTile& pattern_tile, Frame& frame, bool collision_check, const CollisionMask& bg_collision_mask,
-                                      const unsigned char& palette, const unsigned char& x, const unsigned char& y, bool flip_h, bool flip_v, const int& line_number);
+    bool display_sprite_tile_to_frame_line(const PatternTile& pattern_tile, Frame& frame, const CollisionMask& bg_collision_mask,
+                                      const unsigned char& palette, const unsigned char& x, const unsigned char& y,
+                                      const bool& priority, const bool& flip_h, const bool& flip_v, const int& line_number);
 
 
     CollisionMask render_background_line(Frame& frame, const int& line_number);
