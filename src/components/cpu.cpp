@@ -1399,20 +1399,15 @@ void CPU::rotate_left(unsigned char& val) {
 
 
 void CPU::substract_with_carry(const unsigned char& value) {
-    // To substract = res
-    unsigned char to_sub = value + (get_status_register('C') ? 0 : 1);
-    set_status_register('C', to_sub <= reg_a);
-    reg_a = reg_a - to_sub;
-
-    set_status_register('V', (reg_a ^ reg_a) & (reg_a ^ ~value) & 0x80); //TODO not sure
-    set_zero_negative_flags(reg_a);
+    add_with_carry(~value);
 }
 
 void CPU::add_with_carry(const unsigned char& value) {
-    unsigned char to_add = value + (get_status_register('C') ? 1 : 0);
-    set_status_register('C', 255-to_add < reg_a);
-    reg_a = reg_a + to_add;
-    set_status_register('V', (reg_a ^ reg_a) & (reg_a ^ ~value) & 0x80); //TODO not sure
+    unsigned char ori_reg_a = reg_a;
+    unsigned int res = reg_a + value + (get_status_register('C') ? 1 : 0);
+    set_status_register('C', res > 255);
+    reg_a = res & 0xff;
+    set_status_register('V', (reg_a ^ ori_reg_a) & (reg_a ^ value) & 0x80);
     set_zero_negative_flags(reg_a);
 }
 
