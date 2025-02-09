@@ -1358,7 +1358,8 @@ unsigned char CPU::get_indirect_indexed_value(const unsigned char& to_add) {
 void CPU::cmp(const unsigned char& reg_value, const unsigned char& value) {
     set_status_register('Z', reg_value == value);
     set_status_register('C', reg_value >= value);
-    set_status_register('N', reg_value < value);
+    unsigned char res = reg_value - value;
+    set_status_register('N', res & 0b10000000);
 }
 
 void CPU::bit(const unsigned char& value) {

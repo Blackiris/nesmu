@@ -35,7 +35,7 @@ private:
      * NV1B DIZC
      * Carry, Zero, Interrupt disable, Decimal, B flag, 1, Overflow, negative
      */
-    unsigned char reg_p; //status register
+    unsigned char reg_p=0b00100000; //status register
 
 
     void set_status_register(char status, bool enable);

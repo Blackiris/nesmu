@@ -98,7 +98,7 @@ void PPU::render_frame_scanline(Frame& frame, const int& line_number) {
     bool sprite_0_collision = render_sprites_line(frame, bg_collision_mask, line_number);
     if (m_check_sprite_0_collision && sprite_0_collision) {
         m_check_sprite_0_collision = false;
-        m_io_registers.set_bit_at(PPUSTATUS, PPUSTATUS_SPRINT_0, sprite_0_collision);
+        m_io_registers.set_bit_at(PPUSTATUS, PPUSTATUS_SPRINT_0, true);
     } else {
         m_io_registers.set_bit_at(PPUSTATUS, PPUSTATUS_SPRINT_0, false);
     }
