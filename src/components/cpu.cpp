@@ -83,6 +83,7 @@ const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
     {0x49, "EOR Immediate"},
     {0x45, "EOR Zero Page"},
     {0x55, "EOR Zero Page X"},
+    {0x4d, "EOR Absolute"},
     {0x5d, "EOR Absolute X"},
     {0x59, "EOR Absolute Y"},
     {0x41, "EOR Indexed Indirect X"},
@@ -424,7 +425,7 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         reg_a &= get_indirect_indexed_value(reg_y);
         set_zero_negative_flags(reg_a);
         reg_pc += 2;
-        cycle = 5;
+        cycle = 5; //FIXME 6 if page crossed
         break;
 
     case 0x0a: //ASL Accumulator
@@ -446,7 +447,7 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         shift_left(value);
         m_mem_map.set_value_at(addr8, value);
         reg_pc += 2;
-        cycle = 5;
+        cycle = 6;
         break;
     case 0x0e: //ASL Absolute
         addr = get_address_from_memory(reg_pc+1);
@@ -462,7 +463,7 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         shift_left(value);
         m_mem_map.set_value_at(addr, value);
         reg_pc += 3;
-        cycle = 6;
+        cycle = 7;
         break;
 
     case 0x90: //BCC
@@ -500,6 +501,7 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         push_value_to_stack(reg_pc + 2);
         push_byte_to_stack(reg_p);
         reg_pc = 0xfffe;
+        cycle = 7;
         break;
 
     case 0x50: //BVC
@@ -657,7 +659,7 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         reg_a ^= m_mem_map.get_value_at(reg_pc+1);
         set_zero_negative_flags(reg_a);
         reg_pc += 2;
-        cycle = 3;
+        cycle = 2;
         break;
     case 0x45: //EOR Zero Page
         reg_a ^= get_zero_page_value();
@@ -669,6 +671,12 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         reg_a ^= get_zero_page_value(reg_x);
         set_zero_negative_flags(reg_a);
         reg_pc += 2;
+        cycle = 4;
+        break;
+    case 0x4d: //EOR Absolute
+        reg_a ^= get_absolute_value();
+        set_zero_negative_flags(reg_a);
+        reg_pc += 3;
         cycle = 4;
         break;
     case 0x5d: //EOR Absolute X
@@ -695,6 +703,7 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         reg_pc += 2;
         cycle = 5; //6 if page crossed
         break;
+
     case 0xe6: //INC Zero Page
         addr8 = m_mem_map.get_value_at(reg_pc+1);
         value = m_mem_map.get_value_at(addr8);
@@ -797,17 +806,17 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         reg_pc += 3;
         cycle = 4; //FIXME 5 if paged crossed
         break;
-    case 0xb1: //LDA Indirect Indexed Y
-        reg_a = get_indirect_indexed_value(reg_y);
-        set_zero_negative_flags(reg_a);
-        reg_pc += 2;
-        cycle = 5; //FIXME 6 if paged crossed
-        break;
     case 0xa1: //LDA Indexed Indirect X
         reg_a = get_indexed_indirect_value(reg_x);
         set_zero_negative_flags(reg_a);
         reg_pc += 2;
         cycle = 6;
+        break;
+    case 0xb1: //LDA Indirect Indexed Y
+        reg_a = get_indirect_indexed_value(reg_y);
+        set_zero_negative_flags(reg_a);
+        reg_pc += 2;
+        cycle = 5; //FIXME 6 if paged crossed
         break;
 
     case 0xa2: //LDX Immediate
@@ -934,7 +943,7 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         cycle = 4;
         break;
     case 0x0d: //ORA Absolute
-        reg_a |= get_absolute_value(reg_pc+1);
+        reg_a |= get_absolute_value();
         set_zero_negative_flags(reg_a);
         reg_pc += 3;
         cycle = 4;
@@ -1081,11 +1090,6 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         reg_pc += 2;
         cycle = 2;
         break;
-    case 0xed: //SBC Absolute
-        substract_with_carry(get_absolute_value());
-        reg_pc += 3;
-        cycle = 4;
-        break;
     case 0xe5: //SBC Zero Page
         substract_with_carry(get_zero_page_value());
         reg_pc += 2;
@@ -1094,6 +1098,11 @@ short CPU::apply_op_code(const unsigned char& opcode) {
     case 0xf5: //SBC Zero Page X
         substract_with_carry(get_zero_page_value(reg_x));
         reg_pc += 2;
+        cycle = 4;
+        break;
+    case 0xed: //SBC Absolute
+        substract_with_carry(get_absolute_value());
+        reg_pc += 3;
         cycle = 4;
         break;
     case 0xfd: //SBC Absolute X
@@ -1242,8 +1251,8 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         break;
     case 0x9a: //TXS
         reg_sp = reg_x;
-        cycle = 2;
         reg_pc += 1;
+        cycle = 2;
         break;
 
     case 0x98: //TYA
