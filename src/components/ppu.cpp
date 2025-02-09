@@ -76,7 +76,7 @@ PPU::PPU(PPUIORegisters& io_registers, PPUMemoryMap& ppu_mem_map, RAM& oam): m_i
 
 void PPU::set_vblank(bool enable) {
     if (!enable) {
-        m_check_sprite_0_collision = true;
+        m_io_registers.set_bit_at(PPUSTATUS, PPUSTATUS_SPRINT_0, false);
     }
     m_io_registers.set_bit_at(PPUSTATUS, PPUSTATUS_VBLANK, enable);
 }
@@ -96,11 +96,8 @@ void PPU::set_oam_addr(unsigned char value) {
 void PPU::render_frame_scanline(Frame& frame, const int& line_number) {
     CollisionMask bg_collision_mask = render_background_line(frame, line_number);
     bool sprite_0_collision = render_sprites_line(frame, bg_collision_mask, line_number);
-    if (m_check_sprite_0_collision && sprite_0_collision) {
-        m_check_sprite_0_collision = false;
+    if (sprite_0_collision) {
         m_io_registers.set_bit_at(PPUSTATUS, PPUSTATUS_SPRINT_0, true);
-    } else {
-        m_io_registers.set_bit_at(PPUSTATUS, PPUSTATUS_SPRINT_0, false);
     }
 }
 
@@ -115,13 +112,13 @@ void PPU::draw_backdrop_color(Frame& frame) {
     }
 }
 
-CollisionMask PPU::render_background_line(Frame& frame, const int& line_number) {
+CollisionMask PPU::render_background_line(Frame& frame, const int& scanline) {
     CollisionMask collision_mask(std::vector<bool>(frame.width, false));
     if (is_background_rendering_enable()) {
         int x_scroll = m_io_registers.get_scroll_x();
         int y_scroll = m_io_registers.get_scroll_y();
         int i_start = x_scroll/8;
-        int j = (y_scroll+line_number)/8;
+        int j = (y_scroll+scanline)/8;
 
         uint16_t bg_pattern_table_number = get_background_pattern_table_addr();
 
@@ -140,7 +137,7 @@ CollisionMask PPU::render_background_line(Frame& frame, const int& line_number) 
                 palette >>= 2;
             }
             display_bg_tile_to_frame_line(pattern_tile, frame, collision_mask, palette,
-                                     i*8-x_scroll, j*8-y_scroll, line_number);
+                                     i*8-x_scroll, j*8-y_scroll, scanline);
         }
     }
 
@@ -167,14 +164,14 @@ TileInfo PPU::get_tile_info_from_nametables(const int& i, const int& j) {
     return {tile_id, palette_byte};
 }
 
-bool PPU::render_sprites_line(Frame& frame, const CollisionMask& bg_collision_mask, const int& line_number) {
+bool PPU::render_sprites_line(Frame& frame, const CollisionMask& bg_collision_mask, const int& scanline) {
     bool sprite_0_collision = false;
     if (is_sprite_rendering_enable()) {
         uint16_t spr_pattern_table = get_sprite_pattern_table_addr();
         for (int i = 63; i>=0; i--) {
             unsigned char y = m_oam.get_value_at(i*4) + 1;
             // Filter out sprite outside scanline
-            if (y > line_number || line_number >= y+8 ) {
+            if (y > scanline || scanline >= y+8 ) {
                 continue;
             }
 
@@ -188,7 +185,7 @@ bool PPU::render_sprites_line(Frame& frame, const CollisionMask& bg_collision_ma
 
             PatternTile pattern_tile = m_ppu_mem_map.get_pattern_tile(spr_pattern_table * 256 + tile_id);
 
-            bool sprite_collision = display_sprite_tile_to_frame_line(pattern_tile, frame, bg_collision_mask, palette, x, y, priority, flip_h, flip_v, line_number);
+            bool sprite_collision = display_sprite_tile_to_frame_line(pattern_tile, frame, bg_collision_mask, palette, x, y, priority, flip_h, flip_v, scanline);
             if (sprite_collision &&  i==0) {
                 sprite_0_collision = true;
             }
@@ -205,11 +202,11 @@ bool PPU::is_sprite_rendering_enable() {
 }
 
 void PPU::display_bg_tile_to_frame_line(const PatternTile& pattern_tile, Frame& frame, CollisionMask& collision_mask,
-                                   const unsigned char& palette, const unsigned char& x, const unsigned char& y, const int& line_number) {
+                                   const unsigned char& palette, const unsigned char& x, const unsigned char& y, const int& scanline) {
     uint16_t base_palette_addr = 0x3f00 + palette * 0x4;
     int min_x = m_io_registers.get_bit_at(PPUMASK, PPUMASK_SHOW_BG_LEFT_8PX) ? 0 : 8;
 
-    unsigned char j(line_number-y);
+    unsigned char j(scanline-y);
 
     for (unsigned char i=0; i<8; i++) {
         unsigned char pixel_indice = pattern_tile.pixels[i][j];
@@ -232,12 +229,12 @@ void PPU::display_bg_tile_to_frame_line(const PatternTile& pattern_tile, Frame& 
 
 bool PPU::display_sprite_tile_to_frame_line(const PatternTile& pattern_tile, Frame& frame, const CollisionMask& bg_collision_mask,
                                        const unsigned char& palette, const unsigned char& x, const unsigned char& y,
-                                       const bool& priority, const bool& flip_h, const bool& flip_v, const int& line_number) {
+                                       const bool& priority, const bool& flip_h, const bool& flip_v, const int& scanline) {
     uint16_t base_palette_addr = 0x3f10 + palette * 0x4;
     bool collision = false;
 
     int min_x = m_io_registers.get_bit_at(PPUMASK, PPUMASK_SHOW_SPR_LEFT_8PX) ? 0 : 8;
-    unsigned char j(line_number-y);
+    unsigned char j(scanline-y);
 
     for (unsigned char i=0; i<8; i++) {
 

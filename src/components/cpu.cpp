@@ -400,6 +400,7 @@ short CPU::apply_op_code(const unsigned char& opcode) {
         break;
     case 0x2d: //AND Absolute
         reg_a &= get_absolute_value();
+        set_zero_negative_flags(reg_a);
         reg_pc += 3;
         cycle = 4;
         break;
