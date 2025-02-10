@@ -122,7 +122,7 @@ CollisionMask PPU::render_background_line(Frame& frame, const int& scanline) {
 
         uint16_t bg_pattern_table_number = get_background_pattern_table_addr();
 
-        for (int i=i_start; i<i_start+32; i++) {
+        for (int i=i_start; i<=i_start+32; i++) {
             TileInfo tile_info = get_tile_info_from_nametables(i, j);
             PatternTile pattern_tile = m_ppu_mem_map.get_pattern_tile(bg_pattern_table_number * 256 + tile_info.tile_id);
             unsigned char palette = tile_info.palette_byte;
@@ -202,7 +202,7 @@ bool PPU::is_sprite_rendering_enable() {
 }
 
 void PPU::display_bg_tile_to_frame_line(const PatternTile& pattern_tile, Frame& frame, CollisionMask& collision_mask,
-                                   const unsigned char& palette, const unsigned char& x, const unsigned char& y, const int& scanline) {
+                                   const unsigned char& palette, const int& x, const int& y, const int& scanline) {
     uint16_t base_palette_addr = 0x3f00 + palette * 0x4;
     int min_x = m_io_registers.get_bit_at(PPUMASK, PPUMASK_SHOW_BG_LEFT_8PX) ? 0 : 8;
 

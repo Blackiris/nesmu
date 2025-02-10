@@ -54,7 +54,7 @@ private:
      * @param scanline scanline to display
      */
     void display_bg_tile_to_frame_line(const PatternTile& pattern_tile, Frame& frame, CollisionMask& collision_mask,
-                                       const unsigned char& palette, const unsigned char& x, const unsigned char& y, const int& scanline);
+                                       const unsigned char& palette, const int& x, const int& y, const int& scanline);
     /**
      * @brief display_sprite_tile_to_frame
      * @param pattern_tile Tile to draw containing indices
