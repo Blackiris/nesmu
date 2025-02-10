@@ -57,6 +57,9 @@ private:
     unsigned int ppu_scroll_y;
 
     bool w = false;
+    uint16_t t = 0;
+    uint16_t v = 0;
+    unsigned char x = 0;
 
     void set_oam_data(const unsigned char& value);
     int get_vram_addr_incr();

@@ -35,6 +35,13 @@ void PPUIORegisters::set_value_at(const uint16_t& address, const unsigned char& 
             set_oam_data(m_cpu_memory_map -> get_value_at(cpu_addr + i));
         }
     } else if (address == PPUADDR) {
+        if (!w) {
+            t = (t & 0b000000011111111) | ((value & 0b111111) << 8);
+        } else {
+            t = (t & 0b111111100000000) | value;
+            v = t;
+        }
+
         m_ppu_addr = m_ppu_addr << 8 | value;
         w = !w;
     } else if (address == PPUDATA) {
@@ -43,11 +50,17 @@ void PPUIORegisters::set_value_at(const uint16_t& address, const unsigned char& 
         m_ppu_addr += get_vram_addr_incr();
     } else if (address == PPUSCROLL) {
         if (!w) {
+            t = (t & 0b11111111100000) | ((value & 0b11111000) >> 3);
+            x = value & 0b111;
             ppu_scroll_x = value;
         } else {
+            t = (t & 0b000110000011111) | ((value & 0b11111000) << 2) | ((value & 0b111) << 12);
             ppu_scroll_y = value;
         }
         w = !w;
+    } else if (address == PPUCTRL) {
+        t = (t & 0b111001111111111) | ((value & 0b11) << 10);
+        RAM::set_value_at(address, value);
     } else {
         RAM::set_value_at(address, value);
     }
@@ -64,8 +77,10 @@ int PPUIORegisters::get_vram_addr_incr() {
 }
 
 unsigned int PPUIORegisters::get_scroll_x() {
-    bool x_bit8 = RAM::get_bit_at(PPUCTRL, PPUCTRL_SCROLL_X_BIT8);
-    return x_bit8 * 256 + ppu_scroll_x;
+    bool x_bit8 = (t >> 10) & 0b1;
+    return x_bit8 * 256 + (x | ((t & 0b11111) << 3));
+    //bool x_bit8 = RAM::get_bit_at(PPUCTRL, PPUCTRL_SCROLL_X_BIT8);
+    //return x_bit8 * 256 + ppu_scroll_x;
 }
 
 unsigned int PPUIORegisters::get_scroll_y() {
