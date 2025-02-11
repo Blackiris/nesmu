@@ -1,5 +1,6 @@
 #include <iostream>
 #include "ROM/romloader.h"
+#include "components/apu.h"
 #include "components/controller.h"
 #include "components/cpu.h"
 #include "components/cpumemorymap.h"
@@ -9,7 +10,7 @@
 #include "components/screen.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
-#include <math.h>
+
 
 
 const float CPU_FREQ = 1789773.0;  // 1.789 Mhz
@@ -19,8 +20,9 @@ const int CYCLES_PER_FRAME_ACTIVE = CYCLES_PER_FRAME * 240 / 262;
 const int CYCLES_PER_FRAME_ACTIVE_PER_SCANLINE = CYCLES_PER_FRAME / 262;
 const int CYCLES_PER_FRAME_VBLANK = CYCLES_PER_FRAME - CYCLES_PER_FRAME_ACTIVE;
 
-void execute_frame(CPU& cpu, PPU& ppu, Screen& screen) {
-    Uint64 start = SDL_GetPerformanceCounter();
+void execute_frame(CPU& cpu, APU& apu, PPU& ppu, Screen& screen) {
+    screen.prepare_render();
+
 
     ppu.set_vblank(false);
     int total_cpu_cycles = 0;
@@ -35,7 +37,6 @@ void execute_frame(CPU& cpu, PPU& ppu, Screen& screen) {
         }
     }
 
-    //frame = ppu.render_frame();
     screen.render_frame(frame);
     ppu.set_vblank(true);
     if (ppu.maybe_send_nmi()) {
@@ -44,16 +45,13 @@ void execute_frame(CPU& cpu, PPU& ppu, Screen& screen) {
     cpu.exec_cycle(CYCLES_PER_FRAME_VBLANK);
     ppu.set_oam_addr(0);
 
-    Uint64 end = SDL_GetPerformanceCounter();
-    float elapsedMS = (end - start) / (float)SDL_GetPerformanceFrequency() * 1000.0f;
 
-    SDL_Delay(fmax(floor(16.666f - elapsedMS), 0));
 }
 
 int start_engine(const std::string& rom_name) {
     SDL_Window* window = nullptr;
     SDL_Renderer* renderer = nullptr;
-    int result = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
+    int result = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS);
     if (result < 0) {
         SDL_Log("SDL_Init error %s", SDL_GetError());
     }
@@ -67,16 +65,19 @@ int start_engine(const std::string& rom_name) {
     RomLoader romLoader;
     ROM rom = romLoader.read_rom_from_disk(rom_name);
 
+
     Controller controller_1;
     RAM oam(0xf00);
     RAM vram(0x4000);
     PPUMemoryMap ppu_mem_map(rom, vram);
     PPUIORegisters io_registers(oam, ppu_mem_map);
-    RAM papu_io_registers(0xf0);
     RAM ram(0x0800);
-    CPUMemoryMap cpu_mem_map(rom, ram, io_registers, papu_io_registers, &controller_1, nullptr);
+    APU apu(CPU_FREQ);
+    CPUMemoryMap cpu_mem_map(rom, ram, io_registers, &controller_1, nullptr, apu);
     io_registers.set_cpu_memory_map(&cpu_mem_map);
     CPU cpu(cpu_mem_map);
+
+    apu.play_sound();
 
     PPU ppu(io_registers, ppu_mem_map, oam);
     Screen screen(renderer, 256, 240);
@@ -93,7 +94,7 @@ int start_engine(const std::string& rom_name) {
         }
 
         if (success) {
-            execute_frame(cpu, ppu, screen);
+            execute_frame(cpu, apu, ppu, screen);
         }
     }
 

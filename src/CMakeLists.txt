@@ -10,7 +10,8 @@ add_executable(${PROJECT_NAME}
     components/ppumemorymap.h components/ppumemorymap.cpp
     components/ppuioregisters.h components/ppuioregisters.cpp
     components/controller.h components/controller.cpp
-    components/pattern_tile.h  )
+    components/pattern_tile.h
+    components/apu.h components/apu.cpp  )
 target_sources(${PROJECT_NAME} PRIVATE main.cpp
     ROM/romloader.h ROM/romloader.cpp
 

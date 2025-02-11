@@ -1,8 +1,10 @@
 #include "cpumemorymap.h"
 
-CPUMemoryMap::CPUMemoryMap(ROM& rom, RAM& ram, RAM& io_registers, RAM& papu_io_registers, Controller* controller1, Controller* controller2)
-    : m_rom_banks(32768), m_ram(ram), m_io_registers(io_registers), m_papu_io_registers(papu_io_registers),
-    m_controller1(controller1), m_controller2(controller2) {
+CPUMemoryMap::CPUMemoryMap(ROM& rom, RAM& ram, RAM& io_registers,
+                           Controller* controller1, Controller* controller2,
+                           APU& apu)
+    : m_rom_banks(32768), m_ram(ram), m_io_registers(io_registers),
+    m_controller1(controller1), m_controller2(controller2), m_apu(apu) {
 
     m_rom_banks.set_memory_range(0x0000, rom.prg_rom);
     if (rom.prg_rom.size() == 16384) {
@@ -40,7 +42,7 @@ void CPUMemoryMap::set_value_at(const uint16_t& address, const unsigned char& va
     } else if (address == CPU_SPRDMA) {
         m_io_registers.set_value_at(0x8, value);
     } else if (address >= 0x4000 && address < 0x4016) {
-        m_papu_io_registers.set_value_at(address - 0x4000, value);
+        m_apu.update_register(address, value);
     } else if (address >= 0x2000 && address < 0x4000) {
         m_io_registers.set_value_at((address - 0x2000) % 0x8, value);
     } else {

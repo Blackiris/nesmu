@@ -6,6 +6,14 @@
 #include <bitset>
 #include <vector>
 
+const std::map<unsigned char, std::string> RomLoader::mappers = {
+    {0, "NROM, no mapper"},
+    {1, "Nin. MMC1"},
+    {2, "UNROM switch"},
+    {3, "CNROM switch"},
+    {4, "Nin. MMC3"},
+};
+
 RomLoader::RomLoader() {}
 
 ROM RomLoader::read_rom_from_disk(std::string filePath) {
@@ -40,11 +48,11 @@ ROM RomLoader::read_rom_from_disk(std::string filePath) {
         rom.prg_rom.assign(prg_rom_start, prg_rom_end);
         rom.chr_rom.assign(chr_rom_start, chr_rom_end);
 
-        char mapper = flags6 & 0b11110000;
+        char mapper = (flags6 & 0b11110000) >> 4;
         rom.mirror_mode = flags6 & 0b1;
 
-        std::cout << prg_rom_size << " " << chr_rom_size << std::endl;
-        std::cout << flags6_bitset << std::endl;
+        std::cout << "ROM " << prg_rom_size << " x 16k - CHR " << chr_rom_size << " x 8k" << std::endl;
+        std::cout << mappers.at(mapper) << std::endl;
     }
 
     rom_file.close();
