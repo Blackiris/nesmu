@@ -1,4 +1,4 @@
-#include "ppuioregisters.h"
+#include "PPUIORegisters.h"
 
 #include <iostream>
 

@@ -2,7 +2,7 @@
 #define CPUMEMORYMAP_H
 
 #include "../ROM/rom.h"
-#include "imemory.h"
+#include "IMemory.h"
 #include "ram.h"
 #include "controller.h"
 #include "apu.h"

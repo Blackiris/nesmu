@@ -1,4 +1,4 @@
-#include "imemory.h"
+#include "IMemory.h"
 
 void IMemory::set_bit_at(const uint16_t& address, short bit_nb, bool enable) {
     unsigned char value = get_value_at(address);

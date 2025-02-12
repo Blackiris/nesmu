@@ -5,7 +5,7 @@
 #include <map>
 #include <vector>
 
-#include "ppuioregisters.h"
+#include "PPUIORegisters.h"
 #include "ppumemorymap.h"
 #include "../ROM/rom.h"
 #include "../frame.h"

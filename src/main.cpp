@@ -3,10 +3,10 @@
 #include "components/apu.h"
 #include "components/controller.h"
 #include "components/cpu.h"
-#include "components/cpumemorymap.h"
+#include "components/CPUMemoryMap.h"
 #include "components/ppu.h"
 #include "components/ppumemorymap.h"
-#include "components/ppuioregisters.h"
+#include "components/PPUIORegisters.h"
 #include "components/screen.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>

@@ -2,7 +2,7 @@
 #define PPUMEMORYMAP_H
 
 #include "../ROM/rom.h"
-#include "imemory.h"
+#include "IMemory.h"
 #include "ram.h"
 #include "pattern_tile.h"
 

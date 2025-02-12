@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <vector>
-#include "imemory.h"
+#include "IMemory.h"
 
 struct ram_range {
     uint16_t start;

@@ -1,24 +1,25 @@
 #include "apu.h"
 
 #include <iostream>
+#include <array>
 #include <format>
 #include <map>
 #include "math.h"
-#include "cpumemorymap.h"
+#include "CPUMemoryMap.h"
 
 #define SAMPLES 16000
 
 
 APU::APU(const float& cpu_freq) : m_cpu_freq(cpu_freq) {}
 
-static std::map<unsigned char, std::vector<bool>> duty_sequences = {
+static std::map<unsigned char, std::array<bool, 8>> duty_sequences = {
     {0, {0, 1, 0, 0, 0, 0, 0, 0}},
     {1, {0, 1, 1, 0, 0, 0, 0, 0}},
     {2, {0, 1, 1, 1, 1, 0, 0, 0}},
     {3, {1, 0, 0, 1, 1, 1, 1, 1}}
 };
 
-static std::vector<unsigned char> length_counter_table = {
+static std::array<unsigned char, 32> length_counter_table = {
     10,254, 20,  2, 40,  4, 80,  6, 160,  8, 60, 10, 14, 12, 26, 14,
     12, 16, 24, 18, 48, 20, 96, 22, 192, 24, 72, 26, 16, 28, 32, 30
 };
@@ -33,7 +34,7 @@ void SDLCALL APU::Pulse1CallBack(void *userdata, SDL_AudioStream *astream, int a
     additional_amount /= sizeof(float);  /* convert from bytes to samples */
     APU* apu = static_cast<APU*>(userdata);
     const float freq = apu->m_cpu_freq / (16 * (apu->pulse1_t + 1));
-    std::vector<bool> duty_sequence = duty_sequences.at(apu->pulse1_duty);
+    std::array<bool, 8> duty_sequence = duty_sequences.at(apu->pulse1_duty);
     bool silence = apu->pulse1_t < 8 || !(apu->m_channel_status & 0b1) || apu->pulse1_length_counter == 0;
     float amplitude = 1.f;
 
@@ -74,7 +75,7 @@ void SDLCALL APU::Pulse2CallBack(void *userdata, SDL_AudioStream *astream, int a
     additional_amount /= sizeof(float);  /* convert from bytes to samples */
     APU* apu = static_cast<APU*>(userdata);
     const float freq = apu->m_cpu_freq / (16 * (apu->pulse2_t + 1));
-    std::vector<bool> duty_sequence = duty_sequences.at(apu->pulse2_duty);
+    std::array<bool, 8> duty_sequence = duty_sequences.at(apu->pulse2_duty);
     bool silence = apu->pulse2_t < 8 || !(apu->m_channel_status & 0b10) || apu->pulse2_length_counter == 0;
     float amplitude = 1.f;
 

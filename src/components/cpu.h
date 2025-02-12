@@ -5,7 +5,7 @@
 #include <map>
 #include <string>
 
-#include "imemory.h"
+#include "IMemory.h"
 
 
 class CPU
