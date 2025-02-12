@@ -41,7 +41,7 @@ void CPUMemoryMap::set_value_at(const uint16_t& address, const unsigned char& va
     } else if (address == CPU_JOYPAD2) {
     } else if (address == CPU_SPRDMA) {
         m_io_registers.set_value_at(0x8, value);
-    } else if (address >= 0x4000 && address < 0x4016) {
+    } else if (address >= 0x4000 && address <= 0x4017) {
         m_apu.update_register(address, value);
     } else if (address >= 0x2000 && address < 0x4000) {
         m_io_registers.set_value_at((address - 0x2000) % 0x8, value);
