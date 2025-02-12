@@ -40,8 +40,8 @@ public:
 
     void set_cpu_memory_map(IMemory* cpu_memory_map);
 
-    unsigned char get_value_at(const uint16_t& address);
-    void set_value_at(const uint16_t& address, const unsigned char& value);
+    uint8_t get_value_at(const uint16_t& address);
+    void set_value_at(const uint16_t& address, const uint8_t& value);
 
     unsigned int get_scroll_x();
     unsigned int get_scroll_y();
@@ -51,7 +51,7 @@ private:
     IMemory& m_vram;
     IMemory* m_cpu_memory_map;
     uint16_t m_ppu_addr;
-    unsigned char ppu_data_buffer;
+    uint8_t ppu_data_buffer;
 
     unsigned int ppu_scroll_x;
     unsigned int ppu_scroll_y;
@@ -59,9 +59,9 @@ private:
     bool w = false;
     uint16_t t = 0;
     uint16_t v = 0;
-    unsigned char x = 0;
+    uint8_t x = 0;
 
-    void set_oam_data(const unsigned char& value);
+    void set_oam_data(const uint8_t& value);
     int get_vram_addr_incr();
 };
 

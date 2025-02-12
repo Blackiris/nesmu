@@ -35,8 +35,8 @@ public:
     CPUMemoryMap(ROM& rom, RAM& ram, RAM& io_registers,
                  Controller* controller1, Controller* controller2, APU& apu);
 
-    unsigned char get_value_at(const uint16_t& address);
-    void set_value_at(const uint16_t& address, const unsigned char& value);
+    uint8_t get_value_at(const uint16_t& address);
+    void set_value_at(const uint16_t& address, const uint8_t& value);
 
 private:
     RAM m_rom_banks;

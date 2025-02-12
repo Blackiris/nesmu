@@ -39,7 +39,7 @@ void SDLCALL APU::Pulse1CallBack(void *userdata, SDL_AudioStream *astream, int a
     float amplitude = 1.f;
 
     while (additional_amount > 0) {
-        float samples[128];
+        float samples[1280];
         const int total = SDL_min(additional_amount, SDL_arraysize(samples));
         int i;
 
@@ -80,7 +80,7 @@ void SDLCALL APU::Pulse2CallBack(void *userdata, SDL_AudioStream *astream, int a
     float amplitude = 1.f;
 
     while (additional_amount > 0) {
-        float samples[128];
+        float samples[1280];
         const int total = SDL_min(additional_amount, SDL_arraysize(samples));
         int i;
 
@@ -122,14 +122,13 @@ void SDLCALL APU::TriangleCallBack(void *userdata, SDL_AudioStream *astream, int
     bool silence =!(apu->m_channel_status & 0b100) || apu->tri_length_counter == 0;
 
     while (additional_amount > 0) {
-        float samples[128];
+        float samples[1280];
         const int total = SDL_min(additional_amount, SDL_arraysize(samples));
 
         for (i = 0; i < total; i++) {
             float sample = 0;
 
             if (!silence) {
-                std::cout<<freq<<std::endl;
                 const float phase = fmod(current_sample_triangle * freq*2/ SAMPLES, 2.f);
 
                 if (phase < 1.f) {
@@ -189,7 +188,7 @@ void APU::play_sound() {
     SDL_AudioStream* stream_tri = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, TriangleCallBack, this);
     SDL_ResumeAudioStreamDevice(stream_tri);
 }
-void APU::update_register(const uint16_t& addr, unsigned char value) {
+void APU::update_register(const uint16_t& addr, uint8_t value) {
     switch(addr) {
     case APU_PULSE1_CTRL:
         pulse1_duty = (value & 0b11000000) >> 6;

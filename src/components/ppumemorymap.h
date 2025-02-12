@@ -12,8 +12,8 @@ public:
     PPUMemoryMap(ROM& rom, RAM& vram);
     ~PPUMemoryMap();
 
-    unsigned char get_value_at(const uint16_t& address);
-    void set_value_at(const uint16_t& address, const unsigned char& value);
+    uint8_t get_value_at(const uint16_t& address);
+    void set_value_at(const uint16_t& address, const uint8_t& value);
 
     PatternTile get_pattern_tile(const int& tile_number);
 
