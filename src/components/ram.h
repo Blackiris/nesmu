@@ -16,10 +16,10 @@ struct ram_range {
 class RAM : public IMemory
 {
 public:
-    RAM(size_t size);
+    explicit RAM(size_t size);
 
-    uint8_t get_value_at(const uint16_t& address);
-    void set_value_at(const uint16_t& address, const uint8_t& value);
+    uint8_t get_value_at(const uint16_t& address) override;
+    void set_value_at(const uint16_t& address, const uint8_t& value) override;
 private:
     std::vector<uint8_t> mem_array;
     size_t m_size;

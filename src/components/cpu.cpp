@@ -1294,7 +1294,7 @@ int CPU::jump_relative(bool do_jump) {
     if (do_jump) {
         // do the jump
         uint8_t offset = m_mem_map.get_value_at(reg_pc+1);
-        char* real_offset = reinterpret_cast<char*>(&offset);
+        const char* real_offset = reinterpret_cast<char*>(&offset);
         reg_pc += *real_offset;
         cycle = 3; //FIXME or 4 if page crossed
     }

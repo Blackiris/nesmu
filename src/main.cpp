@@ -20,7 +20,7 @@ const int CYCLES_PER_FRAME_ACTIVE = CYCLES_PER_FRAME * 240 / 262;
 const int CYCLES_PER_FRAME_ACTIVE_PER_SCANLINE = CYCLES_PER_FRAME / 262;
 const int CYCLES_PER_FRAME_VBLANK = CYCLES_PER_FRAME - CYCLES_PER_FRAME_ACTIVE;
 
-void execute_frame(CPU& cpu, APU& apu, PPU& ppu, Screen& screen) {
+void execute_frame(CPU& cpu, PPU& ppu, Screen& screen) {
     screen.prepare_render();
 
 
@@ -94,7 +94,7 @@ int start_engine(const std::string& rom_name) {
         }
 
         if (success) {
-            execute_frame(cpu, apu, ppu, screen);
+            execute_frame(cpu, ppu, screen);
         }
     }
 

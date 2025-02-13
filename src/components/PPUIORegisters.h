@@ -40,8 +40,8 @@ public:
 
     void set_cpu_memory_map(IMemory* cpu_memory_map);
 
-    uint8_t get_value_at(const uint16_t& address);
-    void set_value_at(const uint16_t& address, const uint8_t& value);
+    uint8_t get_value_at(const uint16_t& address) override;
+    void set_value_at(const uint16_t& address, const uint8_t& value) override;
 
     unsigned int get_scroll_x();
     unsigned int get_scroll_y();

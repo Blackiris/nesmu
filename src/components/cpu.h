@@ -11,7 +11,7 @@
 class CPU
 {
 public:
-    CPU(IMemory& cpu_mem_map);
+    explicit CPU(IMemory& cpu_mem_map);
     void init();
     int exec_cycle(int nb_cycles);
     void set_nmi();
