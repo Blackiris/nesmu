@@ -154,7 +154,10 @@ void SDLCALL APU::TriangleCallBack(void *userdata, SDL_AudioStream *astream, int
     }
 }
 
-static void SDLCALL NoiseCallBack(void *userdata, SDL_AudioStream *astream, int additional_amount, int total_amount) {
+void SDLCALL APU::NoiseCallBack(void *userdata, SDL_AudioStream *astream, int additional_amount, int total_amount) {
+    APU* apu = static_cast<APU*>(userdata);
+    bool silence = !(apu->m_channel_status & 0b1000) || apu->noise_length_counter_load == 0;
+
     additional_amount /= sizeof(float);  /* convert from bytes to samples */
     while (additional_amount > 0) {
         float samples[128];
@@ -162,9 +165,16 @@ static void SDLCALL NoiseCallBack(void *userdata, SDL_AudioStream *astream, int 
         int i;
 
         for (i = 0; i < total; i++) {
-            float value = (static_cast<float>(rand()) * 2 / static_cast<float>(RAND_MAX)) - 1;
+            float value = 0;
+            if (!silence) {
+                value = (static_cast<float>(rand()) * 2 / static_cast<float>(RAND_MAX)) - 1;
+            }
             samples[i] = value;
             current_sample_noise++;
+
+            if (i % 4 == 0 && !apu->noise_length_counter_halt && apu->noise_length_counter_load > 0) {
+                apu->noise_length_counter_load--;
+            }
         }
         current_sample_noise %= SAMPLES;
 
@@ -187,6 +197,9 @@ void APU::play_sound() {
 
     SDL_AudioStream* stream_tri = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, TriangleCallBack, this);
     SDL_ResumeAudioStreamDevice(stream_tri);
+
+    SDL_AudioStream* stream_noise = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, NoiseCallBack, this);
+    SDL_ResumeAudioStreamDevice(stream_noise);
 }
 void APU::update_register(const uint16_t& addr, const uint8_t& value) {
     switch(addr) {
@@ -235,6 +248,17 @@ void APU::update_register(const uint16_t& addr, const uint8_t& value) {
     case APU_TRI_FREQ2:
         tri_t = (tri_t & 0xff) | ((value & 0b111) << 8);
         tri_length_counter = length_counter_table[(value & 0b11111000) >> 3];
+        break;
+
+    case APU_NOISE_CTRL:
+        noise_length_counter_halt = value & 0b00100000;
+        noise_const_volume = (value & 0b00010000) >> 4;
+        noise_volume = (value & 0b00001111)/15.f;
+        break;
+    case APU_NOISE_FREQ1:
+        break;
+    case APU_NOISE_FREQ2:
+        noise_length_counter_load = length_counter_table[(value & 0b11111000) >> 3];
         break;
 
 
