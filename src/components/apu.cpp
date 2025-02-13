@@ -12,14 +12,14 @@
 
 APU::APU(const float& cpu_freq) : m_cpu_freq(cpu_freq) {}
 
-static std::map<unsigned char, std::array<bool, 8>> duty_sequences = {
+static std::map<uint8_t, std::array<bool, 8>> duty_sequences = {
     {0, {0, 1, 0, 0, 0, 0, 0, 0}},
     {1, {0, 1, 1, 0, 0, 0, 0, 0}},
     {2, {0, 1, 1, 1, 1, 0, 0, 0}},
     {3, {1, 0, 0, 1, 1, 1, 1, 1}}
 };
 
-static std::array<unsigned char, 32> length_counter_table = {
+static std::array<uint8_t, 32> length_counter_table = {
     10,254, 20,  2, 40,  4, 80,  6, 160,  8, 60, 10, 14, 12, 26, 14,
     12, 16, 24, 18, 48, 20, 96, 22, 192, 24, 72, 26, 16, 28, 32, 30
 };
@@ -188,7 +188,7 @@ void APU::play_sound() {
     SDL_AudioStream* stream_tri = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, TriangleCallBack, this);
     SDL_ResumeAudioStreamDevice(stream_tri);
 }
-void APU::update_register(const uint16_t& addr, uint8_t value) {
+void APU::update_register(const uint16_t& addr, const uint8_t& value) {
     switch(addr) {
     case APU_PULSE1_CTRL:
         pulse1_duty = (value & 0b11000000) >> 6;

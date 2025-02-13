@@ -1,7 +1,7 @@
 #include "IMemory.h"
 
 void IMemory::set_bit_at(const uint16_t& address, short bit_nb, bool enable) {
-    unsigned char value = get_value_at(address);
+    uint8_t value = get_value_at(address);
     if (enable) {
         switch(bit_nb) {
         case 0:
@@ -64,7 +64,7 @@ void IMemory::set_bit_at(const uint16_t& address, short bit_nb, bool enable) {
 }
 
 bool IMemory::get_bit_at(const uint16_t& address, short bit_nb) {
-    unsigned char value = get_value_at(address);
+    uint8_t value = get_value_at(address);
     return ((value >> bit_nb) & 0b1) > 0;
 }
 

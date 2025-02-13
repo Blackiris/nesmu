@@ -4,7 +4,7 @@
 
 Controller::Controller() {}
 
-void Controller::set_strobe(const unsigned char& value) {
+void Controller::set_strobe(const uint8_t& value) {
     m_strobe_status = value & 0b1;
     update_strobe_buffer();
 }

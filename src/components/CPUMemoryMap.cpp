@@ -14,13 +14,13 @@ CPUMemoryMap::CPUMemoryMap(ROM& rom, RAM& ram, RAM& io_registers,
 
     // Init ram 0x0 to 0x800 excluded
     for (int16_t i=0x0; i<0x800; i++) {
-        unsigned char val = (i/4)%2 ? 0xff : 0x00;
+        uint8_t val = (i/4)%2 ? 0xff : 0x00;
         m_ram.set_value_at(i, val);
     }
 }
 
-unsigned char CPUMemoryMap::get_value_at(const uint16_t& address) {
-    unsigned char value;
+uint8_t CPUMemoryMap::get_value_at(const uint16_t& address) {
+    uint8_t value;
     if (address >= 0x8000) {
         value = m_rom_banks.get_value_at(address - 0x8000);
     } else if (address == CPU_JOYPAD1) {
@@ -33,7 +33,7 @@ unsigned char CPUMemoryMap::get_value_at(const uint16_t& address) {
     }
     return value;
 }
-void CPUMemoryMap::set_value_at(const uint16_t& address, const unsigned char& value) {
+void CPUMemoryMap::set_value_at(const uint16_t& address, const uint8_t& value) {
     if (address >= 0x8000) {
         // No write on ROM banks
     } else if (address == CPU_JOYPAD1) {

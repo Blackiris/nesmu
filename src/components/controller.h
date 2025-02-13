@@ -10,17 +10,19 @@
 #define BUTTON_LEFT 0b1000000
 #define BUTTON_RIGHT 0b10000000
 
+#include <stdint.h>
+
 class Controller
 {
 public:
     Controller();
 
-    void set_strobe(const unsigned char& value);
+    void set_strobe(const uint8_t& value);
     void update_strobe_buffer();
     bool get_next_state();
 
 private:
-    unsigned char m_strobe_buffer;
+    uint8_t m_strobe_buffer;
     bool m_strobe_status = false;
 };
 

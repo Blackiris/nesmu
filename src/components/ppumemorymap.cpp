@@ -22,9 +22,9 @@ PatternTile PPUMemoryMap::get_pattern_tile(const int& tile_number) {
 PatternTile PPUMemoryMap::load_pattern_tile(const int& tile_number) {
     PatternTile pattern_tile;
     uint16_t first_addr = (tile_number << 4);
-    for (unsigned char j=0; j<8; j++) {
-        for (unsigned char i=0; i<8; i++) {
-            unsigned char pixel = 0;
+    for (uint8_t j=0; j<8; j++) {
+        for (uint8_t i=0; i<8; i++) {
+            uint8_t pixel = 0;
             if (get_bit_at(first_addr+j, 7-i)) {
                 pixel++;
             }
@@ -37,7 +37,7 @@ PatternTile PPUMemoryMap::load_pattern_tile(const int& tile_number) {
     return pattern_tile;
 }
 
-unsigned char PPUMemoryMap::get_value_at(const uint16_t& address) {
+uint8_t PPUMemoryMap::get_value_at(const uint16_t& address) {
     uint16_t real_address = address & 0x3fff;
     if (real_address >= 0x3f00) {
         real_address = 0x3f00 + (real_address - 0x3f00) % 0xf20;
@@ -45,7 +45,7 @@ unsigned char PPUMemoryMap::get_value_at(const uint16_t& address) {
 
     return m_vram.get_value_at(real_address);
 }
-void PPUMemoryMap::set_value_at(const uint16_t& address, const unsigned char& value) {
+void PPUMemoryMap::set_value_at(const uint16_t& address, const uint8_t& value) {
     uint16_t real_address = address & 0x3fff;
     if (real_address >= BASE_PALETTE_ADDR) {
         uint16_t offset_addr = real_address - BASE_PALETTE_ADDR;

@@ -9,12 +9,11 @@ void PPUIORegisters::set_cpu_memory_map(IMemory* cpu_memory_map) {
     m_cpu_memory_map = cpu_memory_map;
 }
 
-unsigned char PPUIORegisters::get_value_at(const uint16_t& address) {
-
+uint8_t PPUIORegisters::get_value_at(const uint16_t& address) {
     if (address == OAMDATA) {
         return m_oam.get_value_at(get_value_at(OAMADDR));
     } else if (address == PPUDATA) {
-        unsigned char val_to_return = ppu_data_buffer;
+        uint8_t val_to_return = ppu_data_buffer;
         ppu_data_buffer = m_vram.get_value_at(m_ppu_addr);
         m_ppu_addr += get_vram_addr_incr();
         return val_to_return;
@@ -25,7 +24,7 @@ unsigned char PPUIORegisters::get_value_at(const uint16_t& address) {
     return RAM::get_value_at(address);
 }
 
-void PPUIORegisters::set_value_at(const uint16_t& address, const unsigned char& value) {
+void PPUIORegisters::set_value_at(const uint16_t& address, const uint8_t& value) {
     if (address == OAMDATA) {
         set_oam_data(value);
     } else if (address == OAMDMA) {
@@ -66,8 +65,8 @@ void PPUIORegisters::set_value_at(const uint16_t& address, const unsigned char& 
     }
 }
 
-void PPUIORegisters::set_oam_data(const unsigned char& value) {
-    unsigned char oamaddr = get_value_at(OAMADDR);
+void PPUIORegisters::set_oam_data(const uint8_t& value) {
+    uint8_t oamaddr = get_value_at(OAMADDR);
     m_oam.set_value_at(oamaddr, value);
     set_value_at(OAMADDR, oamaddr + 1);
 }

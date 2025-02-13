@@ -1,8 +1,10 @@
 #ifndef FRAME_H
 #define FRAME_H
 
+#include <stdint.h>
+
 struct Color {
-    unsigned char r=0, g=0, b=0;
+    uint8_t r=0, g=0, b=0;
 };
 
 struct Frame {

@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-const std::map<unsigned char, Color> PPU::color_palette = {
+const std::map<uint8_t, Color> PPU::color_palette = {
     {0x00, Color(0x75, 0x75, 0x75)},
     {0x01, Color(0x27, 0x1b, 0x8f)},
     {0x02, Color(0x00, 0x00, 0xab)},
@@ -89,7 +89,7 @@ void PPU::load_chr_rom(const ROM& rom) {
     m_ppu_mem_map.set_memory_range(0x0000, rom.chr_rom);
 }
 
-void PPU::set_oam_addr(unsigned char value) {
+void PPU::set_oam_addr(const uint8_t& value) {
     m_io_registers.set_value_at(OAMADDR, value);
 }
 
@@ -102,7 +102,7 @@ void PPU::render_frame_scanline(Frame& frame, const int& line_number) {
 }
 
 void PPU::draw_backdrop_color(Frame& frame) {
-    unsigned char color_indice = m_ppu_mem_map.get_value_at(0x3f00);
+    uint8_t color_indice = m_ppu_mem_map.get_value_at(0x3f00);
     Color color = color_palette.at(color_indice);
 
     for (int i=0; i<frame.width; i++) {
@@ -125,7 +125,7 @@ CollisionMask PPU::render_background_line(Frame& frame, const int& scanline) {
         for (int i=i_start; i<=i_start+32; i++) {
             TileInfo tile_info = get_tile_info_from_nametables(i, j);
             PatternTile pattern_tile = m_ppu_mem_map.get_pattern_tile(bg_pattern_table_number * 256 + tile_info.tile_id);
-            unsigned char palette = tile_info.palette_byte;
+            uint8_t palette = tile_info.palette_byte;
             if ((j%4)/2 == 0) {
                 palette &= 0b00001111;
             } else {
@@ -159,8 +159,8 @@ TileInfo PPU::get_tile_info_from_nametables(const int& i, const int& j) {
     }
 
     uint16_t attr_table_addr = name_table_addr + 0x3c0;
-    unsigned char tile_id = m_ppu_mem_map.get_value_at(name_table_addr+real_i+real_j*32);
-    unsigned char palette_byte = m_ppu_mem_map.get_value_at(attr_table_addr + (real_i/4) + (real_j/4)*8);
+    uint8_t tile_id = m_ppu_mem_map.get_value_at(name_table_addr+real_i+real_j*32);
+    uint8_t palette_byte = m_ppu_mem_map.get_value_at(attr_table_addr + (real_i/4) + (real_j/4)*8);
     return {tile_id, palette_byte};
 }
 
@@ -169,19 +169,19 @@ bool PPU::render_sprites_line(Frame& frame, const CollisionMask& bg_collision_ma
     if (is_sprite_rendering_enable()) {
         uint16_t spr_pattern_table = get_sprite_pattern_table_addr();
         for (int i = 63; i>=0; i--) {
-            unsigned char y = m_oam.get_value_at(i*4) + 1;
+            uint8_t y = m_oam.get_value_at(i*4) + 1;
             // Filter out sprite outside scanline
             if (y > scanline || scanline >= y+8 ) {
                 continue;
             }
 
-            unsigned char x = m_oam.get_value_at(i*4+3);
-            unsigned char tile_id = m_oam.get_value_at(i*4+1);
-            unsigned char attributes = m_oam.get_value_at(i*4+2);
+            uint8_t x = m_oam.get_value_at(i*4+3);
+            uint8_t tile_id = m_oam.get_value_at(i*4+1);
+            uint8_t attributes = m_oam.get_value_at(i*4+2);
             bool priority = (attributes & 0b00100000) > 0;
             bool flip_h = (attributes & 0b01000000) > 0;
             bool flip_v = (attributes & 0b10000000) > 0;
-            unsigned char palette = attributes & 0b11;
+            uint8_t palette = attributes & 0b11;
 
             PatternTile pattern_tile = m_ppu_mem_map.get_pattern_tile(spr_pattern_table * 256 + tile_id);
 
@@ -202,20 +202,20 @@ bool PPU::is_sprite_rendering_enable() {
 }
 
 void PPU::display_bg_tile_to_frame_line(const PatternTile& pattern_tile, Frame& frame, CollisionMask& collision_mask,
-                                   const unsigned char& palette, const int& x, const int& y, const int& scanline) {
+                                   const uint8_t& palette, const int& x, const int& y, const int& scanline) {
     uint16_t base_palette_addr = 0x3f00 + palette * 0x4;
     int min_x = m_io_registers.get_bit_at(PPUMASK, PPUMASK_SHOW_BG_LEFT_8PX) ? 0 : 8;
 
-    unsigned char j(scanline-y);
+    uint8_t j(scanline-y);
 
-    for (unsigned char i=0; i<8; i++) {
-        unsigned char pixel_indice = pattern_tile.pixels[i][j];
+    for (uint8_t i=0; i<8; i++) {
+        uint8_t pixel_indice = pattern_tile.pixels[i][j];
 
         if (pixel_indice > 0) {
             int final_x(x+i);
             int final_y(y+j);
 
-            unsigned char color_indice = m_ppu_mem_map.get_value_at(base_palette_addr + pixel_indice);
+            uint8_t color_indice = m_ppu_mem_map.get_value_at(base_palette_addr + pixel_indice);
             Color color = color_palette.at(color_indice);
 
             if (final_x >= min_x && final_x < frame.width
@@ -228,7 +228,7 @@ void PPU::display_bg_tile_to_frame_line(const PatternTile& pattern_tile, Frame& 
 }
 
 bool PPU::display_sprite_tile_to_frame_line(const PatternTile& pattern_tile, Frame& frame, const CollisionMask& bg_collision_mask,
-                                       const unsigned char& palette, const unsigned char& x, const unsigned char& y,
+                                       const uint8_t& palette, const uint8_t& x, const uint8_t& y,
                                        const bool& priority, const bool& flip_h, const bool& flip_v, const int& scanline) {
     uint16_t base_palette_addr = 0x3f10 + palette * 0x4;
     bool collision = false;

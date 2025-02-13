@@ -299,7 +299,7 @@ void CPU::clear_status_register(char status) {
 }
 
 bool CPU::get_status_register(char status) {
-    unsigned char res;
+    uint8_t res;
     switch(status) {
     case 'C':
         res = reg_p & REGISTER_MASK_C;

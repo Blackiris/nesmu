@@ -17,8 +17,8 @@ struct CollisionMask {
 };
 
 struct TileInfo {
-    unsigned char tile_id;
-    unsigned char palette_byte;
+    uint8_t tile_id;
+    uint8_t palette_byte;
 };
 
 
@@ -29,15 +29,15 @@ public:
     void set_vblank(bool enable);
     bool maybe_send_nmi();
     void load_chr_rom(const ROM& rom);
-    void set_oam_addr(unsigned char value);
+    void set_oam_addr(const uint8_t& value);
     void render_frame_scanline(Frame& frame, const int& line_number);
     void draw_backdrop_color(Frame& frame);
 
 private:
-    static const std::map<unsigned char, Color> color_palette;
+    static const std::map<uint8_t, Color> color_palette;
     PPUIORegisters& m_io_registers;
     PPUMemoryMap& m_ppu_mem_map;
-    unsigned char vram_addr;
+    uint8_t vram_addr;
     RAM& m_oam;
 
     bool is_background_rendering_enable();
@@ -54,7 +54,7 @@ private:
      * @param scanline scanline to display
      */
     void display_bg_tile_to_frame_line(const PatternTile& pattern_tile, Frame& frame, CollisionMask& collision_mask,
-                                       const unsigned char& palette, const int& x, const int& y, const int& scanline);
+                                       const uint8_t& palette, const int& x, const int& y, const int& scanline);
     /**
      * @brief display_sprite_tile_to_frame
      * @param pattern_tile Tile to draw containing indices
@@ -70,7 +70,7 @@ private:
      * @return true if collision with background happens when collision_check = true
      */
     bool display_sprite_tile_to_frame_line(const PatternTile& pattern_tile, Frame& frame, const CollisionMask& bg_collision_mask,
-                                      const unsigned char& palette, const unsigned char& x, const unsigned char& y,
+                                      const uint8_t& palette, const uint8_t& x, const uint8_t& y,
                                       const bool& priority, const bool& flip_h, const bool& flip_v, const int& scanline);
 
 
