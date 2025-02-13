@@ -2,6 +2,7 @@
 #define ROMLOADER_H
 
 #include <string>
+#include <stdint.h>
 #include <map>
 #include "rom.h"
 
@@ -12,7 +13,7 @@ public:
 
     ROM read_rom_from_disk(std::string filePath);
 private:
-    static const std::map<unsigned char, std::string> mappers;
+    static const std::map<uint8_t, std::string> mappers;
 };
 
 #endif // ROMLOADER_H

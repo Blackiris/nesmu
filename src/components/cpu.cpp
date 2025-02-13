@@ -2,7 +2,6 @@
 
 #include <iostream>
 #include <format>
-#include <bitset>
 
 #define REGISTER_MASK_C 0b00000001
 #define REGISTER_MASK_Z 0b00000010
@@ -11,7 +10,7 @@
 #define REGISTER_MASK_V 0b01000000
 #define REGISTER_MASK_N 0b10000000
 
-const std::map<unsigned char, std::string> CPU::opcode_to_inst = {
+const std::map<uint8_t, std::string> CPU::opcode_to_inst = {
     {0x69, "ADC Immediate"},
     {0x65, "ADC Zero Page"},
     {0x75, "ADC Zero Page X"},
@@ -226,7 +225,7 @@ int CPU::exec_cycle(int nb_cycles) {
 
     int total_cycles = 0;
     while (total_cycles < nb_cycles) {
-        unsigned char opcode = m_mem_map.get_value_at(reg_pc);
+        uint8_t opcode = m_mem_map.get_value_at(reg_pc);
         short cycle_op = apply_op_code(opcode);
         total_cycles += cycle_op;
     }
@@ -235,13 +234,13 @@ int CPU::exec_cycle(int nb_cycles) {
 }
 
 uint16_t CPU::get_address_from_memory(const uint16_t& address_1st_byte) {
-    unsigned char byte1 = m_mem_map.get_value_at(address_1st_byte);
-    unsigned char byte2 = m_mem_map.get_value_at(address_1st_byte + 1);
+    uint8_t byte1 = m_mem_map.get_value_at(address_1st_byte);
+    uint8_t byte2 = m_mem_map.get_value_at(address_1st_byte + 1);
 
     return convert_2_bytes_to_16bits(byte1, byte2);
 }
 
-uint16_t CPU::convert_2_bytes_to_16bits(const unsigned char& byte1, const unsigned char& byte2) {
+uint16_t CPU::convert_2_bytes_to_16bits(const uint8_t& byte1, const uint8_t& byte2) {
     return (byte2 << 8) | (0x00FF & byte1);
 }
 
@@ -325,11 +324,11 @@ bool CPU::get_status_register(char status) {
     return res > 0;
 }
 
-short CPU::apply_op_code(const unsigned char& opcode) {
+short CPU::apply_op_code(const uint8_t& opcode) {
     short cycle = 0;
     uint16_t addr;
-    unsigned char addr8;
-    unsigned char value;
+    uint8_t addr8;
+    uint8_t value;
 
     /*if (opcode_to_inst.contains(opcode)) {
         std::cout << std::format("{} {:#x} {} - a={:#x} x={:#x} y={:#x} p={:#x}",
@@ -1294,7 +1293,7 @@ int CPU::jump_relative(bool do_jump) {
     int cycle = 2;
     if (do_jump) {
         // do the jump
-        unsigned char offset = m_mem_map.get_value_at(reg_pc+1);
+        uint8_t offset = m_mem_map.get_value_at(reg_pc+1);
         char* real_offset = reinterpret_cast<char*>(&offset);
         reg_pc += *real_offset;
         cycle = 3; //FIXME or 4 if page crossed
@@ -1311,7 +1310,7 @@ void CPU::push_value_to_stack(const uint16_t& value) {
     reg_sp -= 2;
 }
 
-void CPU::push_byte_to_stack(const unsigned char& value) {
+void CPU::push_byte_to_stack(const uint8_t& value) {
     m_mem_map.set_value_at(0x100+reg_sp, value);
     //std::cout << "Push byte " << std::hex << (int)value << std::endl;
     reg_sp -= 1;
@@ -1324,74 +1323,74 @@ uint16_t CPU::pull_value_from_stack() {
     return value;
 }
 
-unsigned char CPU::pull_byte_from_stack() {
+uint8_t CPU::pull_byte_from_stack() {
     reg_sp += 1;
-    unsigned char value = m_mem_map.get_value_at(0x100+reg_sp);
+    uint8_t value = m_mem_map.get_value_at(0x100+reg_sp);
     //std::cout << "Pull byte " << std::hex << (int)value << std::endl;
     return value;
 }
 
 
 
-unsigned char CPU::get_zero_page_value() {
-    unsigned char addr8 = m_mem_map.get_value_at(reg_pc+1);
+uint8_t CPU::get_zero_page_value() {
+    uint8_t addr8 = m_mem_map.get_value_at(reg_pc+1);
     return m_mem_map.get_value_at(addr8);
 }
 
-unsigned char CPU::get_zero_page_value(const unsigned char& to_add) {
-    unsigned char addr8 = m_mem_map.get_value_at(reg_pc+1);
+uint8_t CPU::get_zero_page_value(const uint8_t& to_add) {
+    uint8_t addr8 = m_mem_map.get_value_at(reg_pc+1);
     return m_mem_map.get_value_at(addr8 + to_add);
 }
 
-unsigned char CPU::get_absolute_value() {
+uint8_t CPU::get_absolute_value() {
     uint16_t addr = get_address_from_memory(reg_pc+1);
     return m_mem_map.get_value_at(addr);
 }
 
-unsigned char CPU::get_absolute_value(const unsigned char& to_add) {
+uint8_t CPU::get_absolute_value(const uint8_t& to_add) {
     uint16_t addr = get_address_from_memory(reg_pc+1);
     return m_mem_map.get_value_at(addr + static_cast<uint16_t>(to_add));
 }
 
-unsigned char CPU::get_indexed_indirect_value(const unsigned char& to_add) {
-    unsigned char addr8 = m_mem_map.get_value_at(reg_pc+1);
+uint8_t CPU::get_indexed_indirect_value(const uint8_t& to_add) {
+    uint8_t addr8 = m_mem_map.get_value_at(reg_pc+1);
     uint16_t addr = get_address_from_memory(addr8+to_add);
     return m_mem_map.get_value_at(addr);
 }
 
-unsigned char CPU::get_indirect_indexed_value(const unsigned char& to_add) {
-    unsigned char addr8 = m_mem_map.get_value_at(reg_pc+1);
+uint8_t CPU::get_indirect_indexed_value(const uint8_t& to_add) {
+    uint8_t addr8 = m_mem_map.get_value_at(reg_pc+1);
     uint16_t addr = get_address_from_memory(addr8);
     return m_mem_map.get_value_at(addr+to_add);
 }
 
-void CPU::cmp(const unsigned char& reg_value, const unsigned char& value) {
+void CPU::cmp(const uint8_t& reg_value, const uint8_t& value) {
     set_status_register('Z', reg_value == value);
     set_status_register('C', reg_value >= value);
-    unsigned char res = reg_value - value;
+    uint8_t res = reg_value - value;
     set_status_register('N', res & 0b10000000);
 }
 
-void CPU::bit(const unsigned char& value) {
-    unsigned char res = reg_a & value;
+void CPU::bit(const uint8_t& value) {
+    uint8_t res = reg_a & value;
     set_status_register('V', value & 0b01000000);
     set_status_register('N', value & 0b10000000);
     set_status_register('Z', res == 0);
 }
 
-void CPU::shift_left(unsigned char& val) {
+void CPU::shift_left(uint8_t& val) {
     set_status_register('C', val & 0b10000000);
     val <<= 1;
     set_zero_negative_flags(val);
 }
 
-void CPU::shift_right(unsigned char& val) {
+void CPU::shift_right(uint8_t& val) {
     set_status_register('C', val & 0b00000001);
     val >>= 1;
     set_zero_negative_flags(val);
 }
 
-void CPU::rotate_right(unsigned char& val) {
+void CPU::rotate_right(uint8_t& val) {
     bool ori_carry = get_status_register('C');
     set_status_register('C', val & 0b00000001);
     val >>= 1;
@@ -1399,7 +1398,7 @@ void CPU::rotate_right(unsigned char& val) {
     set_zero_negative_flags(val);
 }
 
-void CPU::rotate_left(unsigned char& val) {
+void CPU::rotate_left(uint8_t& val) {
     bool ori_carry = get_status_register('C');
     set_status_register('C', val & 0b10000000);
     val <<= 1;
@@ -1408,12 +1407,12 @@ void CPU::rotate_left(unsigned char& val) {
 }
 
 
-void CPU::substract_with_carry(const unsigned char& value) {
+void CPU::substract_with_carry(const uint8_t& value) {
     add_with_carry(~value);
 }
 
-void CPU::add_with_carry(const unsigned char& value) {
-    unsigned char ori_reg_a = reg_a;
+void CPU::add_with_carry(const uint8_t& value) {
+    uint8_t ori_reg_a = reg_a;
     unsigned int res = reg_a + value + (get_status_register('C') ? 1 : 0);
     set_status_register('C', res > 255);
     reg_a = res & 0xff;
@@ -1421,7 +1420,7 @@ void CPU::add_with_carry(const unsigned char& value) {
     set_zero_negative_flags(reg_a);
 }
 
-void CPU::set_zero_negative_flags(const unsigned char& value){
+void CPU::set_zero_negative_flags(const uint8_t& value){
     set_status_register('Z', value == 0);
     set_status_register('N', value & 128);
 }

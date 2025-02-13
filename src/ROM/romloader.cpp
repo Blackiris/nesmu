@@ -3,10 +3,9 @@
 #include <iostream>
 #include <fstream>
 #include <memory>
-#include <bitset>
 #include <vector>
 
-const std::map<unsigned char, std::string> RomLoader::mappers = {
+const std::map<uint8_t, std::string> RomLoader::mappers = {
     {0, "NROM, no mapper"},
     {1, "Nin. MMC1"},
     {2, "UNROM switch"},
@@ -36,8 +35,7 @@ ROM RomLoader::read_rom_from_disk(std::string filePath) {
 
         int prg_rom_size = file_bytes.get()[4];
         int chr_rom_size = file_bytes.get()[5];
-        unsigned char flags6 = file_bytes.get()[6];
-        std::bitset<8> flags6_bitset(flags6);
+        uint8_t flags6 = file_bytes.get()[6];
 
 
         char* prg_rom_start = file_bytes.get() + 16;
