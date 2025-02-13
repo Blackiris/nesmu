@@ -234,19 +234,19 @@ bool PPU::display_sprite_tile_to_frame_line(const PatternTile& pattern_tile, Fra
     bool collision = false;
 
     int min_x = m_io_registers.get_bit_at(PPUMASK, PPUMASK_SHOW_SPR_LEFT_8PX) ? 0 : 8;
-    unsigned char j(scanline-y);
+    uint8_t j(scanline-y);
 
-    for (unsigned char i=0; i<8; i++) {
+    for (uint8_t i=0; i<8; i++) {
 
-        unsigned char final_i = flip_h ? 7-i : i;
-        unsigned char final_j = flip_v ? 7-j : j;
-        unsigned char pixel_indice = pattern_tile.pixels[final_i][final_j];
+        uint8_t final_i = flip_h ? 7-i : i;
+        uint8_t final_j = flip_v ? 7-j : j;
+        uint8_t pixel_indice = pattern_tile.pixels[final_i][final_j];
 
         if (pixel_indice > 0) {
             int final_x(x+i);
             int final_y(y+j);
 
-            unsigned char color_indice = m_ppu_mem_map.get_value_at(base_palette_addr + pixel_indice);
+            uint8_t color_indice = m_ppu_mem_map.get_value_at(base_palette_addr + pixel_indice);
             Color color = color_palette.at(color_indice);
 
             if (final_x>=min_x && final_x < frame.width
