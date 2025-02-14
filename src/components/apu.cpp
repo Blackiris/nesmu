@@ -10,7 +10,7 @@
 #define SAMPLES 16000
 
 
-APU::APU(const float& cpu_freq) : m_cpu_freq(cpu_freq) {}
+APU::APU(const float &cpu_freq) : m_cpu_freq(cpu_freq) {}
 
 static std::map<uint8_t, std::array<bool, 8>> duty_sequences = {
     {0, {0, 1, 0, 0, 0, 0, 0, 0}},
@@ -201,7 +201,7 @@ void APU::play_sound() {
     SDL_AudioStream* stream_noise = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, NoiseCallBack, this);
     SDL_ResumeAudioStreamDevice(stream_noise);
 }
-void APU::update_register(const uint16_t& addr, const uint8_t& value) {
+void APU::update_register(const uint16_t &addr, const uint8_t &value) {
     switch(addr) {
     case APU_PULSE1_CTRL:
         pulse1_duty = (value & 0b11000000) >> 6;

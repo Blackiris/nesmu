@@ -6,10 +6,10 @@
 class APU
 {
 public:
-    explicit APU(const float& cpu_freq);
+    explicit APU(const float &cpu_freq);
 
     void play_sound();
-    void update_register(const uint16_t& addr, const uint8_t& value);
+    void update_register(const uint16_t &addr, const uint8_t &value);
 
 private:
     float m_cpu_freq; //Hz

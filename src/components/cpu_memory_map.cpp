@@ -4,7 +4,7 @@ CPUMemoryMap::CPUMemoryMap(ROM& rom, RAM& ram, RAM& io_registers,
                            IController* controller1, IController* controller2,
                            APU& apu)
     : m_rom_banks(32768), m_ram(ram), m_io_registers(io_registers),
-    m_controller1(controller1), m_controller2(controller2), m_apu(apu) {
+    m_apu(apu), m_controller1(controller1), m_controller2(controller2) {
 
     m_rom_banks.set_memory_range(0x0000, rom.prg_rom);
     if (rom.prg_rom.size() == 16384) {
@@ -26,6 +26,7 @@ uint8_t CPUMemoryMap::get_value_at(const uint16_t& address) {
     } else if (address == CPU_JOYPAD1) {
         value = m_controller1->get_next_state() * 0b1;
     } else if (address == CPU_JOYPAD2) {
+        value = m_controller2->get_next_state() * 0b1;
     } else if (address >= 0x2000 && address < 0x4000) {
         value = m_io_registers.get_value_at((address - 0x2000) % 0x8);
     } else {
@@ -38,7 +39,9 @@ void CPUMemoryMap::set_value_at(const uint16_t& address, const uint8_t& value) {
         // No write on ROM banks
     } else if (address == CPU_JOYPAD1) {
         m_controller1->set_strobe(value);
+        m_controller2->set_strobe(value);
     } else if (address == CPU_JOYPAD2) {
+
     } else if (address == CPU_SPRDMA) {
         m_io_registers.set_value_at(0x8, value);
     } else if (address >= 0x4000 && address <= 0x4017) {

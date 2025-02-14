@@ -1,13 +1,13 @@
 #include <iostream>
 #include "ROM/romloader.h"
 #include "components/apu.h"
-#include "components/controller.h"
 #include "components/cpu.h"
 #include "components/cpu_memory_map.h"
 #include "components/ppu.h"
 #include "components/ppu_memory_map.h"
 #include "components/ppu_io_registers.h"
 #include "components/screen.h"
+#include "sdl_io_interface/sdl_controller.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
@@ -66,14 +66,17 @@ int start_engine(const std::string& rom_name) {
     ROM rom = romLoader.read_rom_from_disk(rom_name);
 
 
-    Controller controller_1;
+    SDLController controller_1(SDL_SCANCODE_G, SDL_SCANCODE_F, SDL_SCANCODE_Q, SDL_SCANCODE_E,
+                               SDL_SCANCODE_W, SDL_SCANCODE_S, SDL_SCANCODE_A, SDL_SCANCODE_D);
+    SDLController controller_2(SDL_SCANCODE_KP_PERIOD, SDL_SCANCODE_KP_0, SDL_SCANCODE_RSHIFT, SDL_SCANCODE_RETURN,
+                               SDL_SCANCODE_UP, SDL_SCANCODE_DOWN, SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT);
     RAM oam(0xf00);
     RAM vram(0x4000);
     PPUMemoryMap ppu_mem_map(rom, vram);
     PPUIORegisters io_registers(oam, ppu_mem_map);
     RAM ram(0x0800);
     APU apu(CPU_FREQ);
-    CPUMemoryMap cpu_mem_map(rom, ram, io_registers, &controller_1, nullptr, apu);
+    CPUMemoryMap cpu_mem_map(rom, ram, io_registers, &controller_1, &controller_2, apu);
     io_registers.set_cpu_memory_map(&cpu_mem_map);
     CPU cpu(cpu_mem_map);
 
