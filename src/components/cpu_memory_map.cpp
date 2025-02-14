@@ -1,7 +1,7 @@
 #include "cpu_memory_map.h"
 
 CPUMemoryMap::CPUMemoryMap(ROM& rom, RAM& ram, RAM& io_registers,
-                           Controller* controller1, Controller* controller2,
+                           IController* controller1, IController* controller2,
                            APU& apu)
     : m_rom_banks(32768), m_ram(ram), m_io_registers(io_registers),
     m_controller1(controller1), m_controller2(controller2), m_apu(apu) {

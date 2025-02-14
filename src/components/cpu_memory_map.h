@@ -4,7 +4,7 @@
 #include "../ROM/rom.h"
 #include "IMemory.h"
 #include "ram.h"
-#include "controller.h"
+#include "../io_interface/icontroller.h"
 #include "apu.h"
 
 #define CPU_SPRDMA 0x4014
@@ -37,7 +37,7 @@ class CPUMemoryMap : public IMemory
 {
 public:
     CPUMemoryMap(ROM& rom, RAM& ram, RAM& io_registers,
-                 Controller* controller1, Controller* controller2, APU& apu);
+                 IController* controller1, IController* controller2, APU& apu);
 
     uint8_t get_value_at(const uint16_t& address) override;
     void set_value_at(const uint16_t& address, const uint8_t& value) override;
@@ -48,8 +48,8 @@ private:
     RAM& m_io_registers;
     APU& m_apu;
 
-    Controller* m_controller1;
-    Controller* m_controller2;
+    IController* m_controller1;
+    IController* m_controller2;
 };
 
 #endif // CPU_MEMORY_MAP_H

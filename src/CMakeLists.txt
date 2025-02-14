@@ -11,7 +11,8 @@ add_executable(${PROJECT_NAME}
     components/ppu_io_registers.h components/ppu_io_registers.cpp
     components/controller.h components/controller.cpp
     components/pattern_tile.h
-    components/apu.h components/apu.cpp  )
+    components/apu.h components/apu.cpp
+    io_interface/icontroller.h io_interface/icontroller.cpp  )
 target_sources(${PROJECT_NAME} PRIVATE main.cpp
     ROM/romloader.h ROM/romloader.cpp
 

@@ -330,11 +330,11 @@ short CPU::apply_op_code(const uint8_t& opcode) {
     uint8_t addr8;
     uint8_t value;
 
-    if (opcode_to_inst.contains(opcode)) {
+    /*if (opcode_to_inst.contains(opcode)) {
         std::cout << std::format("{} {:#x} {} - a={:#x} x={:#x} y={:#x} p={:#x}\n",
                                  cpu_instructions_nb, reg_pc, opcode_to_inst.at(opcode), reg_a, reg_x, reg_y, reg_p);
         cpu_instructions_nb++;
-    }
+    }*/
 
     switch(opcode) {
     case 0x69: //ADC Immediate

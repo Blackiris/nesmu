@@ -10,20 +10,15 @@
 #define BUTTON_LEFT 0b1000000
 #define BUTTON_RIGHT 0b10000000
 
-#include <stdint.h>
+#include "../io_interface/icontroller.h"
 
-class Controller
+class Controller : public IController
 {
 public:
     Controller();
 
-    void set_strobe(const uint8_t& value);
-    void update_strobe_buffer();
-    bool get_next_state();
+    void update_strobe_buffer() override;
 
-private:
-    uint8_t m_strobe_buffer;
-    bool m_strobe_status = false;
 };
 
 #endif // CONTROLLER_H
