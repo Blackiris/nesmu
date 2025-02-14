@@ -5,7 +5,7 @@
 #include <format>
 #include <map>
 #include "math.h"
-#include "CPUMemoryMap.h"
+#include "cpu_memory_map.h"
 
 #define SAMPLES 16000
 

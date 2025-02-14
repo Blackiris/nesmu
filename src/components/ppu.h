@@ -5,8 +5,8 @@
 #include <map>
 #include <vector>
 
-#include "PPUIORegisters.h"
-#include "ppumemorymap.h"
+#include "ppu_io_registers.h"
+#include "ppu_memory_map.h"
 #include "../ROM/rom.h"
 #include "../frame.h"
 #include "pattern_tile.h"

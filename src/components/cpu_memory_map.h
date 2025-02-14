@@ -1,5 +1,5 @@
-#ifndef CPUMEMORYMAP_H
-#define CPUMEMORYMAP_H
+#ifndef CPU_MEMORY_MAP_H
+#define CPU_MEMORY_MAP_H
 
 #include "../ROM/rom.h"
 #include "IMemory.h"
@@ -52,4 +52,4 @@ private:
     Controller* m_controller2;
 };
 
-#endif // CPUMEMORYMAP_H
+#endif // CPU_MEMORY_MAP_H

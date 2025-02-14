@@ -4,11 +4,11 @@ add_executable(${PROJECT_NAME}
     components/screen.cpp components/screen.h
     components/ppu.h components/ppu.cpp
     frame.h
-    components/CPUMemoryMap.h components/CPUMemoryMap.cpp
+    components/cpu_memory_map.h components/cpu_memory_map.cpp
     components/IMemory.h
     components/IMemory.cpp
-    components/ppumemorymap.h components/ppumemorymap.cpp
-    components/PPUIORegisters.h components/PPUIORegisters.cpp
+    components/ppu_memory_map.h components/ppu_memory_map.cpp
+    components/ppu_io_registers.h components/ppu_io_registers.cpp
     components/controller.h components/controller.cpp
     components/pattern_tile.h
     components/apu.h components/apu.cpp  )

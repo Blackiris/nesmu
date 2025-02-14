@@ -1,4 +1,4 @@
-#include "CPUMemoryMap.h"
+#include "cpu_memory_map.h"
 
 CPUMemoryMap::CPUMemoryMap(ROM& rom, RAM& ram, RAM& io_registers,
                            Controller* controller1, Controller* controller2,

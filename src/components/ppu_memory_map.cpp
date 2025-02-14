@@ -1,18 +1,16 @@
-#include "ppumemorymap.h"
+#include "ppu_memory_map.h"
 
 #define BASE_PALETTE_ADDR 0x3f00
 
 PPUMemoryMap::PPUMemoryMap(ROM& rom, RAM& vram): m_vram(vram) {
     m_vram.set_memory_range(0x0000, rom.chr_rom);
 
-    m_pattern_tiles_cache = new PatternTile[2*256];
     for (int i=0; i<512; i++) {
         m_pattern_tiles_cache[i] = load_pattern_tile(i);
     }
 }
 
 PPUMemoryMap::~PPUMemoryMap() {
-    delete[] m_pattern_tiles_cache;
 }
 
 PatternTile PPUMemoryMap::get_pattern_tile(const int& tile_number) {

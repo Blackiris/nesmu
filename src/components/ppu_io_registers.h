@@ -1,5 +1,5 @@
-#ifndef PPUIOREGISTERS_H
-#define PPUIOREGISTERS_H
+#ifndef PPU_IO_REGISTERS_H
+#define PPU_IO_REGISTERS_H
 
 #include "ram.h"
 
@@ -65,4 +65,4 @@ private:
     int get_vram_addr_incr();
 };
 
-#endif // PPUIOREGISTERS_H
+#endif // PPU_IO_REGISTERS_H
