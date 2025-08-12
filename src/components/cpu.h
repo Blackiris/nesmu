@@ -14,7 +14,7 @@ public:
     explicit CPU(IMemory& cpu_mem_map);
     void init();
     int exec_cycle(int nb_cycles);
-    void set_nmi();
+    void set_nmi() noexcept;
 
 private:
     static const std::map<uint8_t, std::string> opcode_to_inst;
@@ -38,14 +38,14 @@ private:
     uint8_t reg_p=0b00100000; //status register
 
 
-    void set_status_register(char status, bool enable);
-    void enable_status_register(char status);
-    void clear_status_register(char status);
-    bool get_status_register(char status);
+    void set_status_register(char status, bool enable) noexcept;
+    void enable_status_register(char status) noexcept;
+    void clear_status_register(char status) noexcept;
+    bool get_status_register(char status) const;
 
     short apply_op_code(const uint8_t& opcode);
-    uint16_t get_address_from_memory(const uint16_t& address_1st_byte);
-    uint16_t convert_2_bytes_to_16bits(const uint8_t& byte1, const uint8_t& byte2);
+    uint16_t get_address_from_memory(const uint16_t& address_1st_byte) const;
+    uint16_t convert_2_bytes_to_16bits(const uint8_t& byte1, const uint8_t& byte2) const;
 
 
     void push_value_to_stack(const uint16_t& value);

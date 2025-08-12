@@ -12,14 +12,14 @@
 
 APU::APU(const float &cpu_freq) : m_cpu_freq(cpu_freq) {}
 
-static std::map<uint8_t, std::array<bool, 8>> duty_sequences = {
+const std::map<uint8_t, std::array<bool, 8>> APU::duty_sequences = {
     {0, {0, 1, 0, 0, 0, 0, 0, 0}},
     {1, {0, 1, 1, 0, 0, 0, 0, 0}},
     {2, {0, 1, 1, 1, 1, 0, 0, 0}},
     {3, {1, 0, 0, 1, 1, 1, 1, 1}}
 };
 
-static std::array<uint8_t, 32> length_counter_table = {
+const std::array<uint8_t, 32> APU::length_counter_table = {
     10,254, 20,  2, 40,  4, 80,  6, 160,  8, 60, 10, 14, 12, 26, 14,
     12, 16, 24, 18, 48, 20, 96, 22, 192, 24, 72, 26, 16, 28, 32, 30
 };
@@ -40,10 +40,9 @@ void SDLCALL APU::Pulse1CallBack(void *userdata, SDL_AudioStream *astream, int a
 
     while (additional_amount > 0) {
         float samples[1280];
-        const int total = SDL_min(additional_amount, SDL_arraysize(samples));
-        int i;
+        const unsigned total = SDL_min(additional_amount, SDL_arraysize(samples));
 
-        for (i = 0; i < total; i++) {
+        for (unsigned i = 0; i < total; i++) {
             float sample = 0;
             const int phase = (int)(current_sample_pulse1 * freq*8.f/ SAMPLES) % 8;
             if (!silence) {
@@ -81,10 +80,9 @@ void SDLCALL APU::Pulse2CallBack(void *userdata, SDL_AudioStream *astream, int a
 
     while (additional_amount > 0) {
         float samples[1280];
-        const int total = SDL_min(additional_amount, SDL_arraysize(samples));
-        int i;
+        const unsigned total = SDL_min(additional_amount, SDL_arraysize(samples));
 
-        for (i = 0; i < total; i++) {
+        for (unsigned i = 0; i < total; i++) {
             float sample = 0;
             const int phase = (int)(current_sample_pulse2 * freq*8.f/ SAMPLES) % 8;
             if (!silence) {
@@ -115,7 +113,6 @@ void SDLCALL APU::TriangleCallBack(void *userdata, SDL_AudioStream *astream, int
 
 
     additional_amount /= sizeof(float);  /* convert from bytes to samples */
-    int i;
     APU* apu = static_cast<APU*>(userdata);
 
     const float freq = apu->m_cpu_freq / (32 * (apu->tri_t + 1));
@@ -123,9 +120,9 @@ void SDLCALL APU::TriangleCallBack(void *userdata, SDL_AudioStream *astream, int
 
     while (additional_amount > 0) {
         float samples[1280];
-        const int total = SDL_min(additional_amount, SDL_arraysize(samples));
+        const unsigned total = SDL_min(additional_amount, SDL_arraysize(samples));
 
-        for (i = 0; i < total; i++) {
+        for (unsigned i = 0; i < total; i++) {
             float sample = 0;
 
             if (!silence) {
@@ -161,10 +158,9 @@ void SDLCALL APU::NoiseCallBack(void *userdata, SDL_AudioStream *astream, int ad
     additional_amount /= sizeof(float);  /* convert from bytes to samples */
     while (additional_amount > 0) {
         float samples[128];
-        const int total = SDL_min(additional_amount, SDL_arraysize(samples));
-        int i;
+        const unsigned total = SDL_min(additional_amount, SDL_arraysize(samples));
 
-        for (i = 0; i < total; i++) {
+        for (unsigned i = 0; i < total; i++) {
             float value = 0;
             if (!silence) {
                 value = (static_cast<float>(rand()) * 2 / static_cast<float>(RAND_MAX)) - 1;

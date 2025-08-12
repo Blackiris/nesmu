@@ -211,7 +211,7 @@ void CPU::init(){
     reg_pc = get_address_from_memory(0xfffc);
 }
 
-void CPU::set_nmi() {
+void CPU::set_nmi() noexcept {
     nmi = true;
 }
 
@@ -233,18 +233,18 @@ int CPU::exec_cycle(int nb_cycles) {
     return total_cycles;
 }
 
-uint16_t CPU::get_address_from_memory(const uint16_t& address_1st_byte) {
+uint16_t CPU::get_address_from_memory(const uint16_t& address_1st_byte) const {
     uint8_t byte1 = m_mem_map.get_value_at(address_1st_byte);
     uint8_t byte2 = m_mem_map.get_value_at(address_1st_byte + 1);
 
     return convert_2_bytes_to_16bits(byte1, byte2);
 }
 
-uint16_t CPU::convert_2_bytes_to_16bits(const uint8_t& byte1, const uint8_t& byte2) {
+uint16_t CPU::convert_2_bytes_to_16bits(const uint8_t& byte1, const uint8_t& byte2) const {
     return (byte2 << 8) | (0x00FF & byte1);
 }
 
-void CPU::set_status_register(char status, bool enable) {
+void CPU::set_status_register(char status, bool enable) noexcept {
     if (enable) {
         enable_status_register(status);
     } else {
@@ -252,7 +252,7 @@ void CPU::set_status_register(char status, bool enable) {
     }
 }
 
-void CPU::enable_status_register(char status) {
+void CPU::enable_status_register(char status) noexcept {
     switch(status) {
     case 'C':
         reg_p |= REGISTER_MASK_C;
@@ -275,7 +275,7 @@ void CPU::enable_status_register(char status) {
     }
 }
 
-void CPU::clear_status_register(char status) {
+void CPU::clear_status_register(char status) noexcept {
     switch(status) {
     case 'C':
         reg_p &= ~REGISTER_MASK_C;
@@ -298,7 +298,7 @@ void CPU::clear_status_register(char status) {
     }
 }
 
-bool CPU::get_status_register(char status) {
+bool CPU::get_status_register(char status) const {
     uint8_t res;
     switch(status) {
     case 'C':
@@ -1419,7 +1419,7 @@ void CPU::add_with_carry(const uint8_t& value) {
     set_zero_negative_flags(reg_a);
 }
 
-void CPU::set_zero_negative_flags(const uint8_t& value){
+void CPU::set_zero_negative_flags(const uint8_t& value) {
     set_status_register('Z', value == 0);
     set_status_register('N', value & 128);
 }
