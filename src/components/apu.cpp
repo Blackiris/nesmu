@@ -2,8 +2,7 @@
 
 #include <iostream>
 #include <array>
-#include <format>
-#include <map>
+#include <unordered_map>
 #include "math.h"
 #include "cpu_memory_map.h"
 
@@ -12,7 +11,7 @@
 
 APU::APU(const float &cpu_freq) : m_cpu_freq(cpu_freq) {}
 
-const std::map<uint8_t, std::array<bool, 8>> APU::duty_sequences = {
+const std::unordered_map<uint8_t, std::array<bool, 8>> APU::duty_sequences = {
     {0, {0, 1, 0, 0, 0, 0, 0, 0}},
     {1, {0, 1, 1, 0, 0, 0, 0, 0}},
     {2, {0, 1, 1, 1, 1, 0, 0, 0}},

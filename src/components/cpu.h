@@ -2,7 +2,7 @@
 #define CPU_H
 
 #include <stdint.h>
-#include <map>
+#include <unordered_map>
 #include <string>
 
 #include "IMemory.h"
@@ -17,7 +17,7 @@ public:
     void set_nmi() noexcept;
 
 private:
-    static const std::map<uint8_t, std::string> opcode_to_inst;
+    static const std::unordered_map<uint8_t, std::string> opcode_to_inst;
     IMemory& m_mem_map;
     bool nmi;
 

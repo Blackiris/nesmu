@@ -3,7 +3,7 @@
 
 #include <SDL3/SDL.h>
 
-#include <map>
+#include <unordered_map>
 
 class APU
 {
@@ -47,7 +47,7 @@ private:
     static void SDLCALL TriangleCallBack(void *userdata, SDL_AudioStream *astream, int additional_amount, int total_amount);
     static void SDLCALL NoiseCallBack(void *userdata, SDL_AudioStream *astream, int additional_amount, int total_amount);
 
-    static const std::map<uint8_t, std::array<bool, 8>> duty_sequences;
+    static const std::unordered_map<uint8_t, std::array<bool, 8>> duty_sequences;
     static const std::array<uint8_t, 32> length_counter_table;
 };
 

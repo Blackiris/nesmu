@@ -2,7 +2,7 @@
 #define PPU_H
 
 #include "ram.h"
-#include <map>
+#include <unordered_map>
 #include <vector>
 
 #include "ppu_io_registers.h"
@@ -34,7 +34,7 @@ public:
     void draw_backdrop_color(Frame& frame);
 
 private:
-    static const std::map<uint8_t, Color> color_palette;
+    static const std::unordered_map<uint8_t, Color> color_palette;
     PPUIORegisters& m_io_registers;
     PPUMemoryMap& m_ppu_mem_map;
     uint8_t vram_addr;

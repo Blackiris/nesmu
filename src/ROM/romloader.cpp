@@ -5,7 +5,7 @@
 #include <memory>
 #include <vector>
 
-const std::map<uint8_t, std::string> RomLoader::mappers = {
+const std::unordered_map<uint8_t, std::string> RomLoader::mappers = {
     {0, "NROM, no mapper"},
     {1, "Nin. MMC1"},
     {2, "UNROM switch"},

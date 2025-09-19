@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-const std::map<uint8_t, Color> PPU::color_palette = {
+const std::unordered_map<uint8_t, Color> PPU::color_palette = {
     {0x00, Color(0x75, 0x75, 0x75)},
     {0x01, Color(0x27, 0x1b, 0x8f)},
     {0x02, Color(0x00, 0x00, 0xab)},

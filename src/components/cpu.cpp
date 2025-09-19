@@ -10,7 +10,7 @@
 #define REGISTER_MASK_V 0b01000000
 #define REGISTER_MASK_N 0b10000000
 
-const std::map<uint8_t, std::string> CPU::opcode_to_inst = {
+const std::unordered_map<uint8_t, std::string> CPU::opcode_to_inst = {
     {0x69, "ADC Immediate"},
     {0x65, "ADC Zero Page"},
     {0x75, "ADC Zero Page X"},

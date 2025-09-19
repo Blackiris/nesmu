@@ -1,10 +1,10 @@
 #ifndef ROMLOADER_H
 #define ROMLOADER_H
 
-#include <string>
-#include <stdint.h>
-#include <map>
 #include "rom.h"
+#include <stdint.h>
+#include <string>
+#include <unordered_map>
 
 class RomLoader
 {
@@ -13,7 +13,7 @@ public:
 
     ROM read_rom_from_disk(std::string filePath);
 private:
-    static const std::map<uint8_t, std::string> mappers;
+    static const std::unordered_map<uint8_t, std::string> mappers;
 };
 
 #endif // ROMLOADER_H
