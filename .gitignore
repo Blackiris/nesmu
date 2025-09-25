@@ -83,3 +83,6 @@ cmake_install.cmake
 .rcc/
 .uic/
 /build*/
+
+# VS Code
+.vscode

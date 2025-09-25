@@ -1,5 +1,7 @@
 # Nesmu NES Emulator
 
+![Nesmu screenshot](/nesmu_screenshot.png?raw=true "Nesmu")
+
 ## Description
 NES emulator based on SDL 3.
 NROM supported only, NTSC
