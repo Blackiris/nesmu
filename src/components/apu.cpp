@@ -29,7 +29,7 @@ static int current_sample_triangle = 0;
 static int current_sample_noise = 0;
 
 /* this function will be called (usually in a background thread) when the audio stream is consuming data. */
-void SDLCALL APU::Pulse1CallBack(void *userdata, SDL_AudioStream *astream, int additional_amount, int total_amount) {
+void SDLCALL APU::Pulse1CallBack(void *userdata, SDL_AudioStream *astream, int additional_amount, int) {
     additional_amount /= sizeof(float);  /* convert from bytes to samples */
     APU* apu = static_cast<APU*>(userdata);
     const float freq = apu->m_cpu_freq / (16 * (apu->pulse1_t + 1));
@@ -39,7 +39,7 @@ void SDLCALL APU::Pulse1CallBack(void *userdata, SDL_AudioStream *astream, int a
 
     while (additional_amount > 0) {
         float samples[1280];
-        const unsigned total = SDL_min(additional_amount, SDL_arraysize(samples));
+        const unsigned total = SDL_min((unsigned)additional_amount, SDL_arraysize(samples));
 
         for (unsigned i = 0; i < total; i++) {
             float sample = 0;
@@ -69,7 +69,7 @@ void SDLCALL APU::Pulse1CallBack(void *userdata, SDL_AudioStream *astream, int a
 }
 
 /* this function will be called (usually in a background thread) when the audio stream is consuming data. */
-void SDLCALL APU::Pulse2CallBack(void *userdata, SDL_AudioStream *astream, int additional_amount, int total_amount) {
+void SDLCALL APU::Pulse2CallBack(void *userdata, SDL_AudioStream *astream, int additional_amount, int) {
     additional_amount /= sizeof(float);  /* convert from bytes to samples */
     APU* apu = static_cast<APU*>(userdata);
     const float freq = apu->m_cpu_freq / (16 * (apu->pulse2_t + 1));
@@ -79,7 +79,7 @@ void SDLCALL APU::Pulse2CallBack(void *userdata, SDL_AudioStream *astream, int a
 
     while (additional_amount > 0) {
         float samples[1280];
-        const unsigned total = SDL_min(additional_amount, SDL_arraysize(samples));
+        const unsigned total = SDL_min((unsigned)additional_amount, SDL_arraysize(samples));
 
         for (unsigned i = 0; i < total; i++) {
             float sample = 0;
@@ -108,7 +108,7 @@ void SDLCALL APU::Pulse2CallBack(void *userdata, SDL_AudioStream *astream, int a
     }
 }
 
-void SDLCALL APU::TriangleCallBack(void *userdata, SDL_AudioStream *astream, int additional_amount, int total_amount) {
+void SDLCALL APU::TriangleCallBack(void *userdata, SDL_AudioStream *astream, int additional_amount, int) {
 
 
     additional_amount /= sizeof(float);  /* convert from bytes to samples */
@@ -119,7 +119,7 @@ void SDLCALL APU::TriangleCallBack(void *userdata, SDL_AudioStream *astream, int
 
     while (additional_amount > 0) {
         float samples[1280];
-        const unsigned total = SDL_min(additional_amount, SDL_arraysize(samples));
+        const unsigned total = SDL_min((unsigned)additional_amount, SDL_arraysize(samples));
 
         for (unsigned i = 0; i < total; i++) {
             float sample = 0;
@@ -150,14 +150,14 @@ void SDLCALL APU::TriangleCallBack(void *userdata, SDL_AudioStream *astream, int
     }
 }
 
-void SDLCALL APU::NoiseCallBack(void *userdata, SDL_AudioStream *astream, int additional_amount, int total_amount) {
+void SDLCALL APU::NoiseCallBack(void *userdata, SDL_AudioStream *astream, int additional_amount, int) {
     APU* apu = static_cast<APU*>(userdata);
     bool silence = !(apu->m_channel_status & 0b1000) || apu->noise_length_counter_load == 0;
 
     additional_amount /= sizeof(float);  /* convert from bytes to samples */
     while (additional_amount > 0) {
         float samples[128];
-        const unsigned total = SDL_min(additional_amount, SDL_arraysize(samples));
+        const unsigned total = SDL_min((unsigned)additional_amount, SDL_arraysize(samples));
 
         for (unsigned i = 0; i < total; i++) {
             float value = 0;
