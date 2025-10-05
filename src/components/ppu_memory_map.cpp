@@ -2,7 +2,7 @@
 
 #define BASE_PALETTE_ADDR 0x3f00
 
-PPUMemoryMap::PPUMemoryMap(ROM& rom, RAM& vram): m_vram(vram) {
+PPUMemoryMap::PPUMemoryMap(const ROM& rom, RAM& vram): m_vram(vram) {
     m_vram.set_memory_range(0x0000, rom.chr_rom);
 
     for (int i=0; i<512; i++) {

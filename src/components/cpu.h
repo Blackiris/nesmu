@@ -23,7 +23,7 @@ private:
     uint8_t reg_a = 0; //accumulator
     uint8_t reg_x = 0;
     uint8_t reg_y = 0;
-    uint16_t reg_pc; //program counter
+    uint16_t reg_pc = 0; //program counter
     uint8_t reg_sp = 0; //stack pointer
 
     // For debug

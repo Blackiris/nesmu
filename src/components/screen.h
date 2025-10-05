@@ -7,6 +7,7 @@ class Screen
 {
 public:
     Screen(SDL_Renderer* renderer, unsigned int width, unsigned int height);
+    Screen(const Screen &screen);
     ~Screen();
     void prepare_render();
     void render_frame(const Frame& frame);

@@ -36,7 +36,7 @@
 class CPUMemoryMap : public IMemory
 {
 public:
-    CPUMemoryMap(ROM& rom, RAM& ram, RAM& io_registers,
+    CPUMemoryMap(const ROM& rom, RAM& ram, RAM& io_registers,
                  IController* controller1, IController* controller2, APU& apu);
 
     uint8_t get_value_at(const uint16_t& address) override;

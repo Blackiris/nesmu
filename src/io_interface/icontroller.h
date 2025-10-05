@@ -21,6 +21,6 @@ public:
     virtual void update_strobe_buffer() = 0;
 
 protected:
-    uint8_t m_strobe_buffer;
+    uint8_t m_strobe_buffer = 0;
     bool m_strobe_status = false;
 };

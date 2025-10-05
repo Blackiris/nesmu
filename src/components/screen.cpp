@@ -11,6 +11,11 @@ Screen::Screen(SDL_Renderer* renderer, unsigned int width, unsigned int height)
     m_pixels = new Uint32[width * height];
 }
 
+Screen::Screen(const Screen &screen) : m_width(screen.m_width), m_height(screen.m_height), m_renderer(screen.m_renderer) {
+    m_texture = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, m_width, m_height);
+    m_pixels = new Uint32[m_width * m_height];
+}
+
 void Screen::prepare_render() {
     m_start_count = SDL_GetPerformanceCounter();
 }

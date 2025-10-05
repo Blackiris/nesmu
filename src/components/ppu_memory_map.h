@@ -10,7 +10,7 @@
 class PPUMemoryMap : public IMemory
 {
 public:
-    PPUMemoryMap(ROM& rom, RAM& vram);
+    PPUMemoryMap(const ROM& rom, RAM& vram);
     ~PPUMemoryMap();
 
     uint8_t get_value_at(const uint16_t& address) override;
