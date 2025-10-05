@@ -1,5 +1,4 @@
-#ifndef SCREEN_H
-#define SCREEN_H
+#pragma once
 
 #include <SDL3/SDL.h>
 #include "../frame.h"
@@ -18,5 +17,3 @@ private:
     Uint32* m_pixels;
     Uint64 m_start_count;
 };
-
-#endif // SCREEN_H

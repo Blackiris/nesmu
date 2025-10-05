@@ -1,5 +1,4 @@
-#ifndef ICONTROLLER_H
-#define ICONTROLLER_H
+#pragma once
 
 #define BUTTON_A 0b1
 #define BUTTON_B 0b10
@@ -25,5 +24,3 @@ protected:
     uint8_t m_strobe_buffer;
     bool m_strobe_status = false;
 };
-
-#endif // ICONTROLLER_H

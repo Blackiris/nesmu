@@ -1,11 +1,10 @@
-#ifndef CPU_H
-#define CPU_H
+#pragma once
 
 #include <stdint.h>
 #include <unordered_map>
 #include <string>
 
-#include "IMemory.h"
+#include "imemory.h"
 
 
 class CPU
@@ -74,5 +73,3 @@ private:
     void substract_with_carry(const uint8_t& value);
     void add_with_carry(const uint8_t& value);
 };
-
-#endif // CPU_H

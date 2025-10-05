@@ -1,5 +1,4 @@
-#ifndef PPU_IO_REGISTERS_H
-#define PPU_IO_REGISTERS_H
+#pragma once
 
 #include "ram.h"
 
@@ -64,5 +63,3 @@ private:
     void set_oam_data(const uint8_t& value);
     int get_vram_addr_incr();
 };
-
-#endif // PPU_IO_REGISTERS_H

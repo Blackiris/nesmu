@@ -1,5 +1,4 @@
-#ifndef FRAME_H
-#define FRAME_H
+#pragma once
 
 #include <stdint.h>
 
@@ -12,5 +11,3 @@ struct Frame {
     int width = 256;
     int height = 240;
 };
-
-#endif // FRAME_H

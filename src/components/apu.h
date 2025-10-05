@@ -1,5 +1,4 @@
-#ifndef APU_H
-#define APU_H
+#pragma once
 
 #include <SDL3/SDL.h>
 
@@ -51,4 +50,3 @@ private:
     static const std::array<uint8_t, 32> length_counter_table;
 };
 
-#endif // APU_H

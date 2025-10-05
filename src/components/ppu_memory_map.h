@@ -1,10 +1,9 @@
-#ifndef PPU_MEMORY_MAP_H
-#define PPU_MEMORY_MAP_H
+#pragma once
 
 #include <array>
 
 #include "../ROM/rom.h"
-#include "IMemory.h"
+#include "imemory.h"
 #include "ram.h"
 #include "pattern_tile.h"
 
@@ -25,5 +24,3 @@ private:
 
     PatternTile load_pattern_tile(const int& tile_number);
 };
-
-#endif // PPU_MEMORY_MAP_H

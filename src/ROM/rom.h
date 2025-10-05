@@ -1,5 +1,4 @@
-#ifndef ROM_H
-#define ROM_H
+#pragma once
 
 #include <vector>
 
@@ -8,5 +7,3 @@ struct ROM {
     std::vector<char> chr_rom;
     bool mirror_mode; //false: vertical, true: horizontal
 };
-
-#endif // ROM_H

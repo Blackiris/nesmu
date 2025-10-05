@@ -1,15 +1,16 @@
-#ifndef PPU_H
-#define PPU_H
+#pragma once
+
+#include "../ROM/rom.h"
+#include "../frame.h"
 
 #include "ram.h"
+#include "ppu_io_registers.h"
+#include "ppu_memory_map.h"
+#include "pattern_tile.h"
+
 #include <unordered_map>
 #include <vector>
 
-#include "ppu_io_registers.h"
-#include "ppu_memory_map.h"
-#include "../ROM/rom.h"
-#include "../frame.h"
-#include "pattern_tile.h"
 
 
 struct CollisionMask {
@@ -90,4 +91,3 @@ private:
     uint16_t get_sprite_pattern_table_addr();
 };
 
-#endif // PPU_H

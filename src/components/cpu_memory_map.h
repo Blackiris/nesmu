@@ -1,10 +1,10 @@
-#ifndef CPU_MEMORY_MAP_H
-#define CPU_MEMORY_MAP_H
+#pragma once
 
 #include "../ROM/rom.h"
-#include "IMemory.h"
-#include "ram.h"
 #include "../io_interface/icontroller.h"
+
+#include "imemory.h"
+#include "ram.h"
 #include "apu.h"
 
 #define CPU_SPRDMA 0x4014
@@ -51,5 +51,3 @@ private:
     IController* m_controller1;
     IController* m_controller2;
 };
-
-#endif // CPU_MEMORY_MAP_H

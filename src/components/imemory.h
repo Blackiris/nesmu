@@ -1,5 +1,4 @@
-#ifndef IMEMORY_H
-#define IMEMORY_H
+#pragma once
 
 #include <stddef.h>
 #include <stdint.h>
@@ -16,5 +15,3 @@ public:
     void set_memory_range(size_t from_address, const std::vector<char>& memory_to_set);
 
 };
-
-#endif // IMEMORY_H

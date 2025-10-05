@@ -5,8 +5,8 @@ add_executable(${PROJECT_NAME}
     components/ppu.h components/ppu.cpp
     frame.h
     components/cpu_memory_map.h components/cpu_memory_map.cpp
-    components/IMemory.h
-    components/IMemory.cpp
+    components/imemory.h
+    components/imemory.cpp
     components/ppu_memory_map.h components/ppu_memory_map.cpp
     components/ppu_io_registers.h components/ppu_io_registers.cpp
 

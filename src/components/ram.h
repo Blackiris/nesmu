@@ -1,10 +1,9 @@
-#ifndef RAM_H
-#define RAM_H
+#pragma once
 
 #include <stddef.h>
 #include <stdint.h>
 #include <vector>
-#include "IMemory.h"
+#include "imemory.h"
 
 struct ram_range {
     uint16_t start;
@@ -24,5 +23,3 @@ private:
     std::vector<uint8_t> mem_array;
     size_t m_size;
 };
-
-#endif // RAM_H

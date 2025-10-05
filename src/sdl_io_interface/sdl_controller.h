@@ -1,5 +1,4 @@
-#ifndef SDL_CONTROLLER_H
-#define SDL_CONTROLLER_H
+#pragma once
 
 #include "../io_interface/icontroller.h"
 #include <SDL3/SDL.h>
@@ -18,5 +17,3 @@ private:
     SDL_Scancode m_btn_a, m_btn_b, m_btn_select, m_btn_start, m_btn_up, m_btn_down,
         m_btn_left, m_btn_right;
 };
-
-#endif // SDL_CONTROLLER_H

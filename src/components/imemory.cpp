@@ -1,4 +1,4 @@
-#include "IMemory.h"
+#include "imemory.h"
 
 void IMemory::set_bit_at(const uint16_t& address, short bit_nb, bool enable) {
     uint8_t value = get_value_at(address);
